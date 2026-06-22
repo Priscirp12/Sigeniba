@@ -1,0 +1,21 @@
+.table-wrapper {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  text-align: left;
+  padding: 0.5rem;
+  border-bottom: 1px solid var(--ion-color-light-shade);
+}
+
+ion-input {
+  --padding-start: 0;
+  --padding-end: 0;
+  min-width: 90px;
+}

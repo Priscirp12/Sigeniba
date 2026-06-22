@@ -1,0 +1,88 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/home"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Control de calificaciones</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>Filtros</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <ion-list lines="none">
+        <ion-item>
+          <ion-label position="stacked">Grupo</ion-label>
+          <ion-select [(ngModel)]="grupoSeleccionado" (ionChange)="onGrupoChange()">
+            <ion-select-option *ngFor="let grupo of grupos" [value]="grupo.id_grupo">
+              {{ grupo.nombre }} · {{ grupo.ciclo_escolar }}
+            </ion-select-option>
+          </ion-select>
+        </ion-item>
+
+        <ion-item>
+          <ion-label position="stacked">Materia</ion-label>
+          <ion-select [(ngModel)]="asignacionSeleccionada" (ionChange)="onAsignacionChange()">
+            <ion-select-option *ngFor="let asignacion of asignaciones" [value]="asignacion.id_gmd">
+              {{ getMateriaNombre(asignacion.id_materia) }}
+            </ion-select-option>
+          </ion-select>
+        </ion-item>
+
+        <ion-item>
+          <ion-label position="stacked">Parcial</ion-label>
+          <ion-select [(ngModel)]="parcial" (ionChange)="onParcialChange()">
+            <ion-select-option [value]="1">Parcial 1</ion-select-option>
+            <ion-select-option [value]="2">Parcial 2</ion-select-option>
+          </ion-select>
+        </ion-item>
+      </ion-list>
+    </ion-card-content>
+  </ion-card>
+
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>Resumen</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <p><strong>Promedio del grupo:</strong> {{ promedioGeneral }}</p>
+    </ion-card-content>
+  </ion-card>
+
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>Lista de alumnos</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Alumno</th>
+              <th *ngFor="let criterio of getCriteriosDelParcial()">
+                {{ criterio.nombre }}
+              </th>
+              <th>Promedio</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let fila of filas">
+              <td>{{ fila.alumno.nombre }} {{ fila.alumno.apellidos }}</td>
+              <td *ngFor="let criterio of getCriteriosDelParcial()">
+                <ion-input
+                  type="number"
+                  [ngModel]="fila.calificaciones[criterio.id_criterio] ?? ''"
+                  (ionInput)="onNotaChange(fila, criterio.id_criterio, $event)"
+                ></ion-input>
+              </td>
+              <td>{{ fila.promedio }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </ion-card-content>
+  </ion-card>
+</ion-content>
