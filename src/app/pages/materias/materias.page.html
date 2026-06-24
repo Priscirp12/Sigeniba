@@ -1,0 +1,36 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/home"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Materias</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding materias-shell">
+  <section class="hero-card">
+    <div>
+      <p class="eyebrow">Vista del alumno</p>
+      <h2>Horario y materias</h2>
+      <p>Consulta tus materias, docentes y horarios en un solo panel.</p>
+    </div>
+  </section>
+
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>Materias del semestre</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <ion-list lines="none">
+        <ion-item *ngFor="let materia of materias" class="materia-item">
+          <div class="materia-badge" [style.background]="materia.color"></div>
+          <ion-label>
+            <h3>{{ materia.nombre }}</h3>
+            <p><ion-icon name="person-circle-outline"></ion-icon> {{ materia.docente }}</p>
+            <p><ion-icon name="book-outline"></ion-icon> {{ materia.horario }}</p>
+          </ion-label>
+        </ion-item>
+      </ion-list>
+    </ion-card-content>
+  </ion-card>
+</ion-content>

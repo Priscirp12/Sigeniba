@@ -1,0 +1,208 @@
+.alumno-shell {
+  --background: #f4f7fb;
+  padding: 0 0 2rem;
+}
+
+.hero-card {
+  background: linear-gradient(135deg, #0f3d67 0%, #1f6cb5 100%);
+  color: #fff;
+  border-radius: 0 0 24px 24px;
+  padding: 1.25rem 1rem 1.4rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  box-shadow: 0 16px 40px rgba(15, 61, 103, 0.18);
+}
+
+.eyebrow {
+  margin: 0 0 0.25rem;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 0.74rem;
+  opacity: 0.9;
+  font-weight: 700;
+}
+
+.hero-card h2 {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 800;
+}
+
+.hero-card p {
+  margin: 0.2rem 0 0;
+  opacity: 0.95;
+  font-weight: 600;
+}
+
+.promedio-box {
+  background: rgba(255, 255, 255, 0.16);
+  border-radius: 16px;
+  padding: 0.7rem 0.9rem;
+  min-width: 110px;
+  text-align: center;
+}
+
+.promedio-box span {
+  display: block;
+  font-size: 0.75rem;
+  opacity: 0.9;
+}
+
+.promedio-box strong {
+  font-size: 1.15rem;
+}
+
+.section-card {
+  margin: 1rem 1rem 0;
+  padding: 0.95rem;
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 8px 24px rgba(15, 61, 103, 0.1);
+}
+
+.section-title {
+  margin-bottom: 0.8rem;
+}
+
+.section-title h3 {
+  margin: 0;
+  color: #123b5c;
+  font-weight: 800;
+}
+
+.section-title p {
+  margin: 0.2rem 0 0;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.table-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.table-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 0.9rem;
+  border-bottom: 1px solid #f1f5f9;
+  color: #334155;
+  font-weight: 600;
+}
+
+.table-row:last-child {
+  border-bottom: none;
+}
+
+.table-head {
+  background: #f8fafc;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.materias-grid {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.materia-card {
+  border: none;
+  background: #f8fafc;
+  border-radius: 14px;
+  padding: 0.8rem 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  text-align: left;
+  color: #0f172a;
+  box-shadow: inset 0 0 0 1px #e2e8f0;
+}
+
+.materia-card h4 {
+  margin: 0 0 0.2rem;
+  font-weight: 800;
+}
+
+.materia-card p {
+  margin: 0.12rem 0 0;
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+.materia-card strong {
+  margin-left: auto;
+  font-size: 1rem;
+  color: #0f3d67;
+}
+
+.materia-dot {
+  width: 12px;
+  height: 44px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+.kardex-block {
+  margin-bottom: 0.9rem;
+}
+
+.kardex-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.4rem;
+}
+
+.kardex-header h4 {
+  margin: 0;
+  color: #123b5c;
+  font-weight: 800;
+}
+
+.kardex-header span {
+  color: #64748b;
+  font-weight: 700;
+}
+
+.general-average {
+  margin-top: 0.8rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 0.85rem;
+  border-radius: 12px;
+  background: #eef6ff;
+  color: #0f3d67;
+  font-weight: 800;
+}
+
+.modal-shell {
+  --background: #f8fafc;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1rem 0.5rem;
+}
+
+.modal-header h3 {
+  margin: 0;
+  color: #123b5c;
+  font-weight: 800;
+}
+
+.modal-body {
+  padding: 0 1rem 1rem;
+}
+
+.modal-meta {
+  margin: 0 0 0.75rem;
+  color: #64748b;
+  font-weight: 600;
+}

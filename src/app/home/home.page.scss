@@ -1,7 +1,44 @@
+.home-shell {
+  --background: #f4f7fb;
+}
+
+.welcome-card {
+  background: linear-gradient(135deg, #0f3d67 0%, #1f6cb5 100%);
+  color: #fff;
+  border-radius: 24px;
+  padding: 1.35rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 16px 40px rgba(15, 61, 103, 0.18);
+}
+
+.eyebrow {
+  margin: 0 0 0.25rem;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 0.78rem;
+  opacity: 0.85;
+  font-weight: 700;
+}
+
+.welcome-card h2 {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 800;
+}
+
+.welcome-card p {
+  margin: 0.25rem 0 0;
+  opacity: 0.95;
+  font-weight: 600;
+}
+
 ion-card {
   margin-bottom: 1rem;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(15, 61, 103, 0.12);
 }
 
 ion-button {
   margin-bottom: 0.5rem;
+  --border-radius: 14px;
 }
