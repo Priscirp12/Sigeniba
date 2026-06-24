@@ -17,6 +17,7 @@ import {
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { lockClosedOutline, schoolOutline } from 'ionicons/icons';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-login',
@@ -44,26 +45,35 @@ export class LoginPage {
   recordar = true;
   mensajeError = '';
 
-  constructor(private readonly router: Router) {
+  constructor(
+    private readonly router: Router,
+    private readonly authService: AuthService
+  ) {
     addIcons({ schoolOutline, lockClosedOutline });
   }
 
-  iniciarSesion(): void {
+  async iniciarSesion(): Promise<void> {
     const correo = this.correo.trim().toLowerCase();
     const password = this.password.trim();
 
-    if ((correo === 'admin@sigeniba.com' || correo === 'admin') && password === '123456') {
-      this.mensajeError = '';
-      this.router.navigateByUrl('/admin');
+    if (!correo || !password) {
+      this.mensajeError = 'Por favor completa usuario y contraseña.';
       return;
     }
 
-    if ((correo === 'alumno@sigeniba.com' || correo === 'alumno') && password === '1234') {
+    try {
+      const user = await this.authService.login(correo, password);
       this.mensajeError = '';
-      this.router.navigateByUrl('/alumno');
-      return;
-    }
 
-    this.mensajeError = 'Credenciales inválidas. Usa administrador o alumno.';
+      if (user.rol === 'administrador') {
+        await this.router.navigateByUrl('/admin');
+      } else if (user.rol === 'alumno') {
+        await this.router.navigateByUrl('/alumno');
+      } else {
+        await this.router.navigateByUrl('/home');
+      }
+    } catch (error) {
+      this.mensajeError = error instanceof Error ? error.message : 'Credenciales inválidas.';
+    }
   }
 }
