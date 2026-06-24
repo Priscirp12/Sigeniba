@@ -11,16 +11,15 @@
     <ion-card>
       <ion-card-content>
         <h2>Iniciar sesión</h2>
-        <p class="subtitle">Accede a tu cuenta para administrar calificaciones y grupos.</p>
 
         <ion-list lines="none">
+          <div class="field-label">Usuario</div>
           <ion-item>
-            <ion-label position="stacked">Correo institucional</ion-label>
             <ion-input type="email" [(ngModel)]="correo" placeholder="usuario@dominio.com"></ion-input>
           </ion-item>
 
+          <div class="field-label">Contraseña</div>
           <ion-item>
-            <ion-label position="stacked">Contraseña</ion-label>
             <ion-input type="password" [(ngModel)]="password" placeholder="••••••••"></ion-input>
           </ion-item>
 
@@ -32,7 +31,7 @@
 
         <ion-button expand="block" class="login-button" (click)="iniciarSesion()">
           <ion-icon slot="start" name="lock-closed-outline"></ion-icon>
-          Entrar
+          Iniciar sesión
         </ion-button>
 
         <ion-text color="danger" *ngIf="mensajeError">
@@ -40,8 +39,7 @@
         </ion-text>
 
         <ion-text color="medium">
-          <p class="footer-text">Admin: <strong>admin@sigeniba.com</strong> · <strong>123456</strong></p>
-          <p class="footer-text">Alumno: <strong>alumno</strong> · <strong>1234</strong></p>
+          
           <p class="footer-text">¿Olvidaste tu contraseña? Contacta al administrador.</p>
         </ion-text>
       </ion-card-content>
