@@ -9,16 +9,16 @@ if ($method !== 'POST') {
 }
 
 $data = json_decode(file_get_contents('php://input'), true);
-$email = $data['email'] ?? '';
+$login = $data['email'] ?? $data['usuario'] ?? '';
 $password = $data['password'] ?? '';
 
-if (!$email || !$password) {
-    echo json_encode(['success' => false, 'message' => 'Email y contraseña son requeridos']);
+if (!$login || !$password) {
+    echo json_encode(['success' => false, 'message' => 'Usuario y contraseña son requeridos']);
     exit;
 }
 
-$stmt = $pdo->prepare('SELECT id_usuario, nombre, apellidos, email, password_hash, rol FROM usuarios WHERE email = ? AND activo = 1 LIMIT 1');
-$stmt->execute([$email]);
+$stmt = $pdo->prepare('SELECT id_usuario, nombre, apellido_paterno, apellido_materno, password_hash, rol FROM usuarios WHERE id_usuario = ? LIMIT 1');
+$stmt->execute([$login]);
 $user = $stmt->fetch();
 
 if (!$user || !password_verify($password, $user['password_hash'])) {
@@ -26,9 +26,17 @@ if (!$user || !password_verify($password, $user['password_hash'])) {
     exit;
 }
 
-unset($user['password_hash']);
+$apellidos = trim(($user['apellido_paterno'] ?? '') . ' ' . ($user['apellido_materno'] ?? ''));
+
+$userPayload = [
+    'id_usuario' => $user['id_usuario'],
+    'nombre' => $user['nombre'],
+    'apellidos' => $apellidos,
+    'email' => $user['id_usuario'],
+    'rol' => $user['rol'],
+];
 
 echo json_encode([
     'success' => true,
-    'user' => $user,
+    'user' => $userPayload,
 ]);
