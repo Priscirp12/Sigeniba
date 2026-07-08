@@ -1,0 +1,113 @@
+<ion-content class="ion-padding admin-shell">
+  <div class="page-header">
+    <h1>Gestión de Docentes</h1>
+    <div class="page-header-actions">
+      <ion-button (click)="abrirNuevo()">
+        <ion-icon slot="start" name="add-outline"></ion-icon>
+        Agregar Docente
+      </ion-button>
+      <ion-searchbar [(ngModel)]="filtroTexto" placeholder="Buscar Docente" showClearButton="always"></ion-searchbar>
+    </div>
+  </div>
+
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>Clave</th>
+          <th>Nombre completo</th>
+          <th>Género</th>
+          <th>Edad</th>
+          <th>Especialidad</th>
+          <th>Email</th>
+          <th>Teléfono</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let docente of docentesFiltrados">
+          <td>{{ docente.id_docente }}</td>
+          <td>{{ docente.nombre }} {{ docente.apellido_paterno }} {{ docente.apellido_materno }}</td>
+          <td>{{ docente.sexo }}</td>
+          <td>{{ docente.edad ?? '-' }}</td>
+          <td>{{ docente.especialidad ?? '-' }}</td>
+          <td>{{ docente.email ?? '-' }}</td>
+          <td>{{ docente.telefono ?? '-' }}</td>
+          <td>
+            <ion-button size="small" fill="clear" (click)="abrirEditar(docente)">
+              <ion-icon slot="icon-only" name="create-outline"></ion-icon>
+            </ion-button>
+          </td>
+        </tr>
+        <tr *ngIf="!cargando && !docentesFiltrados.length">
+          <td colspan="8" class="empty">No hay docentes que coincidan con la búsqueda.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <ion-modal [isOpen]="modalAbierto" (didDismiss)="cerrarModal()">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar>
+          <ion-title>{{ modoEdicion ? 'Editar docente' : 'Registrar docente' }}</ion-title>
+          <ion-buttons slot="end">
+            <ion-button (click)="cerrarModal()">Cerrar</ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content class="ion-padding">
+        <ion-list lines="none">
+          <ion-item>
+            <ion-label position="stacked">Nombre</ion-label>
+            <ion-input [(ngModel)]="form.nombre"></ion-input>
+          </ion-item>
+          <ion-item>
+            <ion-label position="stacked">Apellido paterno</ion-label>
+            <ion-input [(ngModel)]="form.apellido_paterno"></ion-input>
+          </ion-item>
+          <ion-item>
+            <ion-label position="stacked">Apellido materno</ion-label>
+            <ion-input [(ngModel)]="form.apellido_materno"></ion-input>
+          </ion-item>
+          <ion-item>
+            <ion-label position="stacked">Clave de docente</ion-label>
+            <ion-input [(ngModel)]="form.id_docente"></ion-input>
+          </ion-item>
+          <ion-item>
+            <ion-label position="stacked">Género</ion-label>
+            <ion-select [(ngModel)]="form.sexo">
+              <ion-select-option value="F">Femenino</ion-select-option>
+              <ion-select-option value="M">Masculino</ion-select-option>
+            </ion-select>
+          </ion-item>
+          <ion-item>
+            <ion-label position="stacked">Edad</ion-label>
+            <ion-input type="number" [(ngModel)]="form.edad"></ion-input>
+          </ion-item>
+          <ion-item>
+            <ion-label position="stacked">Especialidad</ion-label>
+            <ion-input [(ngModel)]="form.especialidad"></ion-input>
+          </ion-item>
+          <ion-item>
+            <ion-label position="stacked">Email</ion-label>
+            <ion-input type="email" [(ngModel)]="form.email"></ion-input>
+          </ion-item>
+          <ion-item>
+            <ion-label position="stacked">Teléfono</ion-label>
+            <ion-input [(ngModel)]="form.telefono"></ion-input>
+          </ion-item>
+          <ion-item>
+            <ion-label position="stacked">{{ modoEdicion ? 'Nueva contraseña (opcional)' : 'Contraseña' }}</ion-label>
+            <ion-input type="password" [(ngModel)]="form.password"></ion-input>
+          </ion-item>
+        </ion-list>
+
+        <div class="actions">
+          <ion-button color="medium" fill="outline" (click)="cerrarModal()">Cancelar</ion-button>
+          <ion-button [disabled]="guardando" (click)="guardar()">Guardar</ion-button>
+        </div>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+</ion-content>

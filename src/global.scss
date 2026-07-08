@@ -28,10 +28,14 @@
 /**
  * Ionic Dark Mode
  * -----------------------------------------------------
+ * Deliberately disabled: el diseño de la app (paleta azul/blanco institucional)
+ * es fijo y no contempla un modo oscuro. Si se activa "dark.system.css", el
+ * texto se vuelve blanco en dispositivos con tema oscuro del sistema, quedando
+ * invisible sobre las tarjetas/campos de fondo claro.
  * For more info, please see:
  * https://ionicframework.com/docs/theming/dark-mode
  */
 
 /* @import "@ionic/angular/css/palettes/dark.always.css"; */
 /* @import "@ionic/angular/css/palettes/dark.class.css"; */
-@import '@ionic/angular/css/palettes/dark.system.css';
+/* @import '@ionic/angular/css/palettes/dark.system.css'; */

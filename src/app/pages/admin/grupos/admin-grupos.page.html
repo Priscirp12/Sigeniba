@@ -1,0 +1,206 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Gestión de Grupos</ion-title>
+  </ion-toolbar>
+  <ion-toolbar>
+    <ion-segment [value]="segmento" (ionChange)="cambiarSegmento($any($event.detail.value))">
+      <ion-segment-button value="crear">
+        <ion-label>Crear grupo</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="alumnos">
+        <ion-label>Asignar alumnos</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="tutor">
+        <ion-label>Asignar tutor</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="materias">
+        <ion-label>Materias a docente</ion-label>
+      </ion-segment-button>
+    </ion-segment>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding admin-shell">
+  <!-- Crear grupo -->
+  <ion-list *ngIf="segmento === 'crear'" lines="none">
+    <ion-item>
+      <ion-label position="stacked">Nombre del grupo</ion-label>
+      <ion-input [(ngModel)]="nombreGrupo" placeholder="Ej. 1A"></ion-input>
+    </ion-item>
+    <ion-item>
+      <ion-label position="stacked">Semestre</ion-label>
+      <ion-select [(ngModel)]="semestreGrupo">
+        <ion-select-option *ngFor="let s of [1, 2, 3, 4, 5, 6]" [value]="s">Semestre {{ s }}</ion-select-option>
+      </ion-select>
+    </ion-item>
+    <ion-item>
+      <ion-label position="stacked">Turno</ion-label>
+      <ion-select [(ngModel)]="turnoGrupo">
+        <ion-select-option value="Matutino">Matutino</ion-select-option>
+        <ion-select-option value="Vespertino">Vespertino</ion-select-option>
+      </ion-select>
+    </ion-item>
+    <ion-item>
+      <ion-label position="stacked">Tutor (opcional)</ion-label>
+      <ion-select [(ngModel)]="claveTutorGrupo">
+        <ion-select-option [value]="null">Sin asignar</ion-select-option>
+        <ion-select-option *ngFor="let docente of docentes" [value]="docente.id_docente">
+          {{ docente.nombre }} {{ docente.apellido_paterno }}
+        </ion-select-option>
+      </ion-select>
+    </ion-item>
+    <div class="actions">
+      <ion-button [disabled]="guardandoGrupo" (click)="crearGrupo()">Crear grupo</ion-button>
+    </div>
+
+    <div class="lista-header">
+      <h3>Grupos existentes</h3>
+      <ion-searchbar [(ngModel)]="filtroGrupoTexto" placeholder="Buscar Grupo" showClearButton="always"></ion-searchbar>
+    </div>
+    <ion-item *ngFor="let grupo of gruposFiltrados">
+      <ion-label>
+        {{ grupo.nombre }} — Semestre {{ grupo.semestre }} — {{ grupo.turno ?? 'Sin turno' }}
+        <p *ngIf="grupo.tutor_nombre">Tutor: {{ grupo.tutor_nombre }} {{ grupo.tutor_apellido_paterno }}</p>
+        <p *ngIf="!grupo.tutor_nombre">Sin tutor asignado</p>
+      </ion-label>
+    </ion-item>
+    <ion-item *ngIf="!gruposFiltrados.length">
+      <ion-label class="empty">No hay grupos que coincidan con la búsqueda.</ion-label>
+    </ion-item>
+  </ion-list>
+
+  <!-- Asignar / cambiar alumnos de grupo -->
+  <div *ngIf="segmento === 'alumnos'">
+    <div class="filtros">
+      <ion-item>
+        <ion-label position="stacked">Generación</ion-label>
+        <ion-input [(ngModel)]="filtroGeneracion" (ionChange)="buscarAlumnos()"></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-label position="stacked">Semestre</ion-label>
+        <ion-select [(ngModel)]="filtroSemestre" (ionChange)="buscarAlumnos()">
+          <ion-select-option [value]="null">Todos</ion-select-option>
+          <ion-select-option *ngFor="let s of [1, 2, 3, 4, 5, 6]" [value]="s">Semestre {{ s }}</ion-select-option>
+        </ion-select>
+      </ion-item>
+    </div>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th></th>
+            <th>Matrícula</th>
+            <th>Nombre</th>
+            <th>Generación</th>
+            <th>Grupo actual</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let alumno of alumnos">
+            <td>
+              <ion-checkbox (ionChange)="toggleSeleccionado(alumno.matricula, $event.detail.checked)"></ion-checkbox>
+            </td>
+            <td>{{ alumno.matricula }}</td>
+            <td>{{ alumno.nombre }} {{ alumno.apellido_paterno }}</td>
+            <td>{{ alumno.generacion ?? '-' }}</td>
+            <td>{{ alumno.grupo_nombre ?? 'Sin grupo' }}</td>
+          </tr>
+          <tr *ngIf="!alumnos.length">
+            <td colspan="5" class="empty">No hay alumnos con esos filtros.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <ion-item>
+      <ion-label position="stacked">Agregar seleccionados al grupo</ion-label>
+      <ion-select [(ngModel)]="grupoDestino">
+        <ion-select-option *ngFor="let grupo of grupos" [value]="grupo.id_grupo">{{ grupo.nombre }}</ion-select-option>
+      </ion-select>
+    </ion-item>
+    <div class="actions">
+      <ion-button [disabled]="asignandoAlumnos" (click)="agregarAlGrupo()">Agregar al grupo</ion-button>
+    </div>
+  </div>
+
+  <!-- Asignar tutor -->
+  <div *ngIf="segmento === 'tutor'">
+    <div class="lista-header">
+      <ion-searchbar [(ngModel)]="filtroGrupoTexto" placeholder="Buscar Grupo" showClearButton="always"></ion-searchbar>
+    </div>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Grupo</th>
+            <th>Tutor actual</th>
+            <th>Nuevo tutor</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let grupo of gruposFiltrados">
+            <td>{{ grupo.nombre }} (Sem. {{ grupo.semestre }})</td>
+            <td>{{ grupo.tutor_nombre ? (grupo.tutor_nombre + ' ' + grupo.tutor_apellido_paterno) : 'Sin tutor' }}</td>
+            <td>
+              <ion-select [(ngModel)]="tutorPorGrupo[grupo.id_grupo]">
+                <ion-select-option *ngFor="let docente of docentes" [value]="docente.id_docente">
+                  {{ docente.nombre }} {{ docente.apellido_paterno }}
+                </ion-select-option>
+              </ion-select>
+            </td>
+            <td>
+              <ion-button size="small" [disabled]="asignandoTutor[grupo.id_grupo]" (click)="asignarTutor(grupo)">Asignar</ion-button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Asignar materias a docente -->
+  <div *ngIf="segmento === 'materias'">
+    <ion-item>
+      <ion-label position="stacked">Docente</ion-label>
+      <ion-select [(ngModel)]="docenteSeleccionado" (ionChange)="onDocenteSeleccionado()">
+        <ion-select-option *ngFor="let docente of docentes" [value]="docente.id_docente">
+          {{ docente.nombre }} {{ docente.apellido_paterno }}
+        </ion-select-option>
+      </ion-select>
+    </ion-item>
+
+    <ng-container *ngIf="docenteSeleccionado">
+      <ion-item>
+        <ion-label position="stacked">Materia</ion-label>
+        <ion-select [(ngModel)]="materiaSeleccionada">
+          <ion-select-option *ngFor="let materia of materias" [value]="materia.id_materia">{{ materia.nombre }}</ion-select-option>
+        </ion-select>
+      </ion-item>
+      <ion-item>
+        <ion-label position="stacked">Grupo</ion-label>
+        <ion-select [(ngModel)]="grupoParaAsignacion">
+          <ion-select-option *ngFor="let grupo of grupos" [value]="grupo.id_grupo">{{ grupo.nombre }}</ion-select-option>
+        </ion-select>
+      </ion-item>
+      <ion-item>
+        <ion-label position="stacked">Periodo</ion-label>
+        <ion-select [(ngModel)]="periodoParaAsignacion" interface="popover">
+          <ion-select-option *ngFor="let periodo of periodos" [value]="periodo.id_periodo">{{ periodo.ciclo_escolar }}</ion-select-option>
+        </ion-select>
+        <ion-note *ngIf="!periodos.length">Aún no hay periodos escolares. Crea uno en "Fechas de captura".</ion-note>
+      </ion-item>
+      <div class="actions">
+        <ion-button [disabled]="asignandoMateria" (click)="agregarMateriaADocente()">Agregar materia al docente</ion-button>
+      </div>
+
+      <h3>Materias ya asignadas a este docente</h3>
+      <ion-item *ngFor="let asignacion of asignacionesDocente">
+        <ion-label>{{ asignacion.materia_nombre }} — {{ asignacion.grupo_nombre }}</ion-label>
+      </ion-item>
+      <ion-item *ngIf="!asignacionesDocente.length">
+        <ion-label class="empty">Este docente no tiene materias asignadas.</ion-label>
+      </ion-item>
+    </ng-container>
+  </div>
+</ion-content>

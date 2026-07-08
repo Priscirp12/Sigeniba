@@ -1,0 +1,67 @@
+<ion-content class="ion-padding admin-shell">
+  <div class="page-header">
+    <h1>Gestión de Materias</h1>
+    <div class="page-header-actions">
+      <ion-button (click)="abrirNuevo()">
+        <ion-icon slot="start" name="add-outline"></ion-icon>
+        Agregar Materia
+      </ion-button>
+      <ion-searchbar [(ngModel)]="filtroTexto" placeholder="Buscar Materia" showClearButton="always"></ion-searchbar>
+    </div>
+  </div>
+
+  <ion-list lines="full">
+    <ion-item *ngFor="let materia of materiasFiltradas" button="true" (click)="abrirEditar(materia)">
+      <ion-label>
+        {{ materia.nombre }}
+        <p>{{ materia.clave ?? 'Sin clave' }} · {{ materia.horas_semana ?? '-' }} hrs/semana</p>
+      </ion-label>
+      <ion-icon slot="end" name="create-outline"></ion-icon>
+    </ion-item>
+    <ion-item *ngIf="!cargando && !materiasFiltradas.length">
+      <ion-label class="empty">No hay materias que coincidan con la búsqueda.</ion-label>
+    </ion-item>
+  </ion-list>
+
+  <ion-modal [isOpen]="modalAbierto" (didDismiss)="cerrarModal()">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar>
+          <ion-title>{{ modoEdicion ? 'Editar materia' : 'Dar de alta materia' }}</ion-title>
+          <ion-buttons slot="end">
+            <ion-button (click)="cerrarModal()">Cerrar</ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content class="ion-padding">
+        <ion-list lines="none">
+          <ion-item>
+            <ion-label position="stacked">Nombre de la materia</ion-label>
+            <ion-input [(ngModel)]="nombre"></ion-input>
+          </ion-item>
+          <ion-item>
+            <ion-label position="stacked">Clave</ion-label>
+            <ion-input [(ngModel)]="clave"></ion-input>
+          </ion-item>
+          <ion-item>
+            <ion-label position="stacked">Horas por semana</ion-label>
+            <ion-input type="number" [(ngModel)]="horasSemana"></ion-input>
+          </ion-item>
+          <ion-item *ngIf="!modoEdicion">
+            <ion-label position="stacked">Periodo</ion-label>
+            <ion-select [(ngModel)]="idPeriodo" interface="popover">
+              <ion-select-option [value]="null">Sin periodo</ion-select-option>
+              <ion-select-option *ngFor="let periodo of periodos" [value]="periodo.id_periodo">{{ periodo.ciclo_escolar }}</ion-select-option>
+            </ion-select>
+            <ion-note *ngIf="!periodos.length">Aún no hay periodos escolares. Crea uno en "Fechas de captura".</ion-note>
+          </ion-item>
+        </ion-list>
+
+        <div class="actions">
+          <ion-button color="medium" fill="outline" (click)="cerrarModal()">Cancelar</ion-button>
+          <ion-button [disabled]="guardando" (click)="guardar()">Guardar</ion-button>
+        </div>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+</ion-content>

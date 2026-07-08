@@ -1,0 +1,54 @@
+.docente-shell {
+  --background: #f4f7fb;
+}
+
+.page-header {
+  margin-bottom: 1rem;
+}
+
+.page-header h1 {
+  margin: 0;
+  color: #0f3d67;
+  font-size: 1.3rem;
+  font-weight: 800;
+}
+
+ion-card {
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(15, 61, 103, 0.12);
+}
+
+.menu-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+  max-width: 700px;
+}
+
+.menu-grid ion-card-header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.menu-grid ion-icon {
+  font-size: 1.6rem;
+  color: #1f6cb5;
+}
+
+.menu-grid ion-card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.menu-grid strong {
+  font-size: 1.6rem;
+  color: #0f3d67;
+}
+
+.menu-grid span {
+  color: #64748b;
+  font-size: 0.85rem;
+}

@@ -1,0 +1,83 @@
+<ion-split-pane contentId="admin-content">
+  <ion-menu contentId="admin-content" class="admin-menu">
+    <ion-header>
+      <ion-toolbar>
+        <ion-title>SIGENIBA</ion-title>
+      </ion-toolbar>
+    </ion-header>
+    <ion-content class="menu-content">
+      <div class="user-block">
+        <ion-icon name="person-circle-outline"></ion-icon>
+        <div class="user-info">
+          <strong>{{ usuario?.nombre }} {{ usuario?.apellidos }}</strong>
+          <span class="rol"><span class="dot"></span>{{ usuario?.rol }}</span>
+        </div>
+      </div>
+
+      <p class="menu-label">Menú Principal</p>
+
+      <ion-list lines="none">
+        <ion-item button="true" (click)="toggleGrupo('alumnos')">
+          <ion-icon slot="start" name="people-outline"></ion-icon>
+          <ion-label>Gestión de Alumnos</ion-label>
+          <ion-icon slot="end" name="chevron-down-outline" [class.rotated]="openGroups.alumnos"></ion-icon>
+        </ion-item>
+        <ion-item *ngIf="openGroups.alumnos" button="true" routerLink="/admin/alumnos" routerLinkActive="active-link" class="sub-item">
+          <ion-label>• Consultar alumnos</ion-label>
+        </ion-item>
+
+        <ion-item button="true" (click)="toggleGrupo('docentes')">
+          <ion-icon slot="start" name="school-outline"></ion-icon>
+          <ion-label>Gestión de Docentes</ion-label>
+          <ion-icon slot="end" name="chevron-down-outline" [class.rotated]="openGroups.docentes"></ion-icon>
+        </ion-item>
+        <ion-item *ngIf="openGroups.docentes" button="true" routerLink="/admin/docentes" routerLinkActive="active-link" class="sub-item">
+          <ion-label>• Consultar Docentes</ion-label>
+        </ion-item>
+
+        <ion-item button="true" (click)="toggleGrupo('grupos')">
+          <ion-icon slot="start" name="people-outline"></ion-icon>
+          <ion-label>Gestión de Grupos</ion-label>
+          <ion-icon slot="end" name="chevron-down-outline" [class.rotated]="openGroups.grupos"></ion-icon>
+        </ion-item>
+        <ion-item *ngIf="openGroups.grupos" button="true" routerLink="/admin/grupos" routerLinkActive="active-link" class="sub-item">
+          <ion-label>• Consultar Grupos</ion-label>
+        </ion-item>
+
+        <ion-item button="true" routerLink="/admin/materias" routerLinkActive="active-link">
+          <ion-icon slot="start" name="book-outline"></ion-icon>
+          <ion-label>Materias</ion-label>
+        </ion-item>
+        <ion-item button="true" routerLink="/admin/fechas" routerLinkActive="active-link">
+          <ion-icon slot="start" name="calendar-outline"></ion-icon>
+          <ion-label>Fechas de captura</ion-label>
+        </ion-item>
+        <ion-item button="true" routerLink="/admin/cuenta" routerLinkActive="active-link">
+          <ion-icon slot="start" name="key-outline"></ion-icon>
+          <ion-label>Mi cuenta</ion-label>
+        </ion-item>
+      </ion-list>
+    </ion-content>
+  </ion-menu>
+
+  <div class="ion-page" id="admin-content">
+    <ion-header>
+      <ion-toolbar class="topbar">
+        <ion-title>SIGENIBA</ion-title>
+        <div slot="end" class="user-chip">
+          <ion-icon name="person-circle-outline"></ion-icon>
+          <div class="chip-info">
+            <strong>{{ usuario?.nombre }} {{ usuario?.apellidos }}</strong>
+            <span>{{ usuario?.rol }}</span>
+          </div>
+          <ion-button fill="clear" (click)="cerrarSesion()">
+            <ion-icon slot="icon-only" name="log-out-outline"></ion-icon>
+          </ion-button>
+        </div>
+      </ion-toolbar>
+    </ion-header>
+    <div class="outlet-wrapper">
+      <ion-router-outlet></ion-router-outlet>
+    </div>
+  </div>
+</ion-split-pane>

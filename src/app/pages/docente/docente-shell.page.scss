@@ -1,0 +1,126 @@
+.docente-menu {
+  --width: 264px;
+  border-right: 1px solid #e2e8f0;
+}
+
+.menu-content {
+  --background: #ffffff;
+}
+
+.user-block {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 1rem;
+  border-bottom: 1px solid #eef2f7;
+}
+
+.user-block ion-icon {
+  font-size: 2.4rem;
+  color: #1f6cb5;
+}
+
+.user-info strong {
+  display: block;
+  font-size: 0.9rem;
+  color: #0f3d67;
+}
+
+.rol {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  color: #64748b;
+  text-transform: capitalize;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #22c55e;
+  display: inline-block;
+}
+
+.menu-label {
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  color: #94a3b8;
+  font-weight: 700;
+  padding: 0.9rem 1rem 0.25rem;
+  margin: 0;
+}
+
+ion-item {
+  --padding-start: 1rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+.sub-item {
+  --padding-start: 2.4rem;
+  --min-height: 38px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #475569;
+}
+
+ion-icon[name='chevron-down-outline'] {
+  transition: transform 0.2s ease;
+}
+
+ion-icon.rotated {
+  transform: rotate(180deg);
+}
+
+.active-link {
+  --color: #1f6cb5;
+  --background: #eef4fb;
+  font-weight: 700;
+}
+
+#docente-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.outlet-wrapper {
+  position: relative;
+  flex: 1;
+  overflow: hidden;
+}
+
+.topbar {
+  --background: #ffffff;
+}
+
+.user-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding-right: 0.25rem;
+}
+
+.user-chip > ion-icon {
+  font-size: 1.8rem;
+  color: #1f6cb5;
+}
+
+.chip-info {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+
+.chip-info strong {
+  font-size: 0.85rem;
+  color: #0f3d67;
+}
+
+.chip-info span {
+  font-size: 0.72rem;
+  color: #64748b;
+  text-transform: capitalize;
+}

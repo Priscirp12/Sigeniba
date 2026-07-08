@@ -1,0 +1,79 @@
+<ion-content class="ion-padding docente-shell">
+  <div class="page-header">
+    <h1>Criterios de Evaluación</h1>
+  </div>
+
+  <div class="selectores">
+    <ion-item>
+      <ion-label position="stacked">Materia / Grupo</ion-label>
+      <ion-select [(ngModel)]="idAsignacionSeleccionada" (ionChange)="onCambio()">
+        <ion-select-option *ngFor="let a of asignaciones" [value]="a.id_asignacion">
+          {{ a.materia_nombre }} — {{ a.grupo_nombre }}
+        </ion-select-option>
+      </ion-select>
+    </ion-item>
+    <ion-item>
+      <ion-label position="stacked">Evaluación</ion-label>
+      <ion-select [(ngModel)]="tipoSeleccionado" (ionChange)="onCambio()">
+        <ion-select-option *ngFor="let tipo of tipos" [value]="tipo.valor">{{ tipo.etiqueta }}</ion-select-option>
+      </ion-select>
+    </ion-item>
+  </div>
+
+  <div class="suma" [class.completa]="sumaActual === 10" [class.excedida]="sumaActual > 10">
+    Suma actual: {{ sumaActual }} / 10 puntos
+  </div>
+
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>Criterio</th>
+          <th>Puntos</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let criterio of criterios">
+          <td>{{ criterio.nombre }} <span class="tag" *ngIf="criterio.es_examen">Fijo</span></td>
+          <td>
+            <ng-container *ngIf="editandoId !== criterio.id_criterio">{{ criterio.valor_puntos }}</ng-container>
+            <ion-input
+              *ngIf="editandoId === criterio.id_criterio"
+              type="number"
+              [max]="criterio.es_examen ? 5 : 10"
+              [(ngModel)]="valorEditado"
+            ></ion-input>
+          </td>
+          <td class="acciones">
+            <ng-container *ngIf="editandoId !== criterio.id_criterio">
+              <ion-button size="small" fill="clear" (click)="editarValor(criterio)">Editar</ion-button>
+              <ion-button size="small" fill="clear" color="danger" *ngIf="!criterio.es_examen" (click)="eliminarCriterio(criterio)">
+                <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+              </ion-button>
+            </ng-container>
+            <ng-container *ngIf="editandoId === criterio.id_criterio">
+              <ion-button size="small" (click)="guardarEdicion(criterio)">Guardar</ion-button>
+              <ion-button size="small" fill="outline" color="medium" (click)="cancelarEdicion()">Cancelar</ion-button>
+            </ng-container>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="agregar">
+    <ion-item>
+      <ion-label position="stacked">Nombre del criterio</ion-label>
+      <ion-input [(ngModel)]="nuevoNombre" placeholder="Ej. Tareas"></ion-input>
+    </ion-item>
+    <ion-item>
+      <ion-label position="stacked">Puntos</ion-label>
+      <ion-input type="number" [(ngModel)]="nuevoValor"></ion-input>
+    </ion-item>
+    <ion-button [disabled]="guardando" (click)="agregarCriterio()">
+      <ion-icon slot="start" name="add-outline"></ion-icon>
+      Agregar criterio
+    </ion-button>
+  </div>
+</ion-content>

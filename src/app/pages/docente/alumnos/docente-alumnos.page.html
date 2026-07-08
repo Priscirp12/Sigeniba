@@ -1,0 +1,36 @@
+<ion-content class="ion-padding docente-shell">
+  <div class="page-header">
+    <h1>Alumnos</h1>
+  </div>
+
+  <ion-item>
+    <ion-label position="stacked">Grupo</ion-label>
+    <ion-select [(ngModel)]="idGrupoSeleccionado" (ionChange)="cargarAlumnos()">
+      <ion-select-option *ngFor="let grupo of grupos" [value]="grupo.id_grupo">{{ grupo.nombre }}</ion-select-option>
+    </ion-select>
+  </ion-item>
+
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>Matrícula</th>
+          <th>Nombre</th>
+          <th>Email</th>
+          <th>Teléfono</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let alumno of alumnos">
+          <td>{{ alumno.matricula }}</td>
+          <td>{{ alumno.nombre }} {{ alumno.apellido_paterno }} {{ alumno.apellido_materno }}</td>
+          <td>{{ alumno.email ?? '-' }}</td>
+          <td>{{ alumno.telefono ?? '-' }}</td>
+        </tr>
+        <tr *ngIf="!cargando && !alumnos.length">
+          <td colspan="4" class="empty">No hay alumnos en este grupo.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</ion-content>

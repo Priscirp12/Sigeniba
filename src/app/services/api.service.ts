@@ -18,4 +18,12 @@ export class ApiService {
   async post<T>(path: string, body: unknown): Promise<T> {
     return firstValueFrom(this.http.post<T>(`${this.baseUrl}/${path}`, body));
   }
+
+  async put<T>(path: string, body: unknown): Promise<T> {
+    return firstValueFrom(this.http.put<T>(`${this.baseUrl}/${path}`, body));
+  }
+
+  async delete<T>(path: string): Promise<T> {
+    return firstValueFrom(this.http.delete<T>(`${this.baseUrl}/${path}`));
+  }
 }

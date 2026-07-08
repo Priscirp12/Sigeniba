@@ -69,6 +69,8 @@ export class LoginPage {
         await this.router.navigateByUrl('/admin');
       } else if (user.rol === 'alumno') {
         await this.router.navigateByUrl('/alumno');
+      } else if (user.rol === 'docente') {
+        await this.router.navigateByUrl('/docente');
       } else {
         await this.router.navigateByUrl('/home');
       }

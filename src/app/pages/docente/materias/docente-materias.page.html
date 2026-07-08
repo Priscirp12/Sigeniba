@@ -1,0 +1,51 @@
+<ion-content class="ion-padding docente-shell">
+  <div class="page-header">
+    <h1>Mis Materias</h1>
+    <ion-searchbar [(ngModel)]="filtroTexto" placeholder="Buscar Materia" showClearButton="always"></ion-searchbar>
+  </div>
+
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>Materia</th>
+          <th>Clave</th>
+          <th>Horas / Semana</th>
+          <th>Acción</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let materia of materiasFiltradas">
+          <td>{{ materia.nombre }}</td>
+          <td>{{ materia.clave ?? '-' }}</td>
+          <td>{{ materia.horas_semana ?? '-' }}</td>
+          <td><ion-button size="small" fill="outline" (click)="verDetalle(materia)">Ver</ion-button></td>
+        </tr>
+        <tr *ngIf="!cargando && !materiasFiltradas.length">
+          <td colspan="4" class="empty">No tienes materias asignadas todavía.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="detalle-panel" *ngIf="materiaSeleccionada as materia">
+    <button class="volver" (click)="cerrarDetalle()">
+      <ion-icon name="arrow-back-outline"></ion-icon>
+      Detalle Materia
+    </button>
+
+    <h3>Información General</h3>
+    <div class="detalle-fila">
+      <span>Nombre:</span>
+      <strong>{{ materia.nombre }}</strong>
+    </div>
+    <div class="detalle-fila">
+      <span>Clave:</span>
+      <strong>{{ materia.clave ?? '-' }}</strong>
+    </div>
+    <div class="detalle-fila" *ngFor="let grupo of materia.grupos">
+      <span>Grupo:</span>
+      <strong>{{ grupo.grupo_nombre }} · Semestre {{ grupo.semestre }} · Ciclo {{ grupo.ciclo_escolar }}</strong>
+    </div>
+  </div>
+</ion-content>

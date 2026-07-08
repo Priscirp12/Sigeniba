@@ -1,78 +1,37 @@
-import { NgFor } from '@angular/common';
 import { Component } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
-import {
-  IonBackButton,
-  IonButton,
-  IonButtons,
-  IonCard,
-  IonCardContent,
-  IonCardHeader,
-  IonCardTitle,
-  IonContent,
-  IonHeader,
-  IonIcon,
-  IonInput,
-  IonItem,
-  IonLabel,
-  IonList,
-  IonSelect,
-  IonSelectOption,
-  IonTitle,
-  IonToolbar,
-} from '@ionic/angular/standalone';
+import { RouterLink } from '@angular/router';
+import { IonCard, IonCardContent, IonCardHeader, IonCardTitle, IonContent, IonIcon } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { createOutline, logOutOutline, peopleOutline, schoolOutline } from 'ionicons/icons';
+import { bookOutline, calendarOutline, keyOutline, peopleOutline, schoolOutline } from 'ionicons/icons';
+import { AdminService } from '../../services/admin.service';
 
 @Component({
   selector: 'app-admin',
   templateUrl: './admin.page.html',
   styleUrls: ['./admin.page.scss'],
-  imports: [
-    NgFor,
-    FormsModule,
-    RouterLink,
-    IonHeader,
-    IonToolbar,
-    IonButtons,
-    IonBackButton,
-    IonTitle,
-    IonContent,
-    IonCard,
-    IonCardHeader,
-    IonCardTitle,
-    IonCardContent,
-    IonList,
-    IonItem,
-    IonLabel,
-    IonInput,
-    IonSelect,
-    IonSelectOption,
-    IonButton,
-    IonIcon,
-  ],
+  imports: [RouterLink, IonContent, IonCard, IonCardHeader, IonCardTitle, IonCardContent, IonIcon],
 })
 export class AdminPage {
-  alumno = {
-    nombre: 'María Fernanda',
-    apellidos: 'López Torres',
-    matricula: '2024001',
-    correo: 'mlopez@sigeniba.com',
-    grupo: '1A',
-    turno: 'Matutino',
-    estatus: 'Activo',
-  };
+  totalAlumnos = 0;
+  totalDocentes = 0;
+  totalMaterias = 0;
+  totalGrupos = 0;
 
-  grupos = ['1A', '1B', '2A', '2B'];
-  turnos = ['Matutino', 'Vespertino'];
-  estatus = ['Activo', 'Inactivo', 'Baja'];
-
-  constructor(private readonly router: Router) {
-    addIcons({ peopleOutline, schoolOutline, createOutline, logOutOutline });
+  constructor(private readonly adminService: AdminService) {
+    addIcons({ peopleOutline, schoolOutline, bookOutline, calendarOutline, keyOutline });
+    this.cargarResumen();
   }
 
-  cerrarSesion(): void {
-    this.router.navigateByUrl('/login');
+  async cargarResumen(): Promise<void> {
+    const [alumnos, docentes, materias, grupos] = await Promise.all([
+      this.adminService.getAlumnos(),
+      this.adminService.getDocentes(),
+      this.adminService.getMaterias(),
+      this.adminService.getGrupos(),
+    ]);
+    this.totalAlumnos = alumnos.length;
+    this.totalDocentes = docentes.length;
+    this.totalMaterias = materias.length;
+    this.totalGrupos = grupos.length;
   }
 }

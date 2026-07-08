@@ -1,0 +1,93 @@
+.docente-shell {
+  --background: #f4f7fb;
+}
+
+.page-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.page-header h1 {
+  margin: 0;
+  color: #0f3d67;
+  font-size: 1.3rem;
+  font-weight: 800;
+}
+
+.page-header ion-searchbar {
+  --border-radius: 12px;
+  width: 260px;
+  padding: 0;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+th,
+td {
+  text-align: left;
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid var(--ion-color-light-shade);
+  white-space: nowrap;
+}
+
+.empty {
+  text-align: center;
+  color: #64748b;
+  white-space: normal;
+}
+
+.detalle-panel {
+  margin-top: 1.25rem;
+  background: #fff;
+  border-radius: 16px;
+  padding: 1rem 1.25rem;
+  box-shadow: 0 10px 30px rgba(15, 61, 103, 0.1);
+}
+
+.volver {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: none;
+  border: none;
+  color: #0f3d67;
+  font-weight: 700;
+  font-size: 1rem;
+  padding: 0;
+  margin-bottom: 0.75rem;
+  cursor: pointer;
+}
+
+.detalle-panel h3 {
+  color: #1f6cb5;
+  margin: 0 0 0.75rem;
+}
+
+.detalle-fila {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #eef2f7;
+}
+
+.detalle-fila span {
+  color: #64748b;
+}
+
+.detalle-fila strong {
+  color: #0f3d67;
+}

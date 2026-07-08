@@ -1,0 +1,88 @@
+<ion-content class="ion-padding docente-shell">
+  <div class="page-header">
+    <h1>Mis Grupos</h1>
+    <ion-searchbar [(ngModel)]="filtroTexto" placeholder="Buscar Grupo" showClearButton="always"></ion-searchbar>
+  </div>
+
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>Grupo</th>
+          <th>Semestre</th>
+          <th>Turno</th>
+          <th>Materia</th>
+          <th>Acción</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let asignacion of asignacionesFiltradas">
+          <td>{{ asignacion.grupo_nombre }}</td>
+          <td>{{ asignacion.semestre }}</td>
+          <td>{{ asignacion.turno ?? '-' }}</td>
+          <td>{{ asignacion.materia_nombre }}</td>
+          <td><ion-button size="small" fill="outline" (click)="verAlumnos(asignacion)">Ver Alumnos</ion-button></td>
+        </tr>
+        <tr *ngIf="!cargando && !asignacionesFiltradas.length">
+          <td colspan="5" class="empty">No tienes grupos asignados todavía.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="detalle-panel" *ngIf="grupoSeleccionado as grupo">
+    <button class="volver" (click)="cerrarPanel()">
+      <ion-icon name="arrow-back-outline"></ion-icon>
+      Alumnos
+    </button>
+    <p class="subtitulo">Lista de Alumnos Pertenecientes al grupo seleccionado: {{ grupo.grupo_nombre }}</p>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Matrícula</th>
+            <th>Nombre</th>
+            <th>Promedio</th>
+            <th>Acción</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let alumno of alumnos">
+            <td>{{ alumno.matricula }}</td>
+            <td>{{ alumno.nombre }} {{ alumno.apellido_paterno }}</td>
+            <td>{{ promedioDe(alumno.matricula) }}</td>
+            <td class="acciones">
+              <ion-button size="small" fill="clear" (click)="abrirDetalle(alumno)">Ver</ion-button>
+              <ion-button size="small" (click)="capturarCalificaciones()">Capturar Calificaciones</ion-button>
+            </td>
+          </tr>
+          <tr *ngIf="!alumnos.length">
+            <td colspan="4" class="empty">Este grupo no tiene alumnos asignados todavía.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <ion-modal [isOpen]="modalDetalleAbierto" (didDismiss)="cerrarDetalle()">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar>
+          <ion-title>Calificaciones del alumno</ion-title>
+          <ion-buttons slot="end">
+            <ion-button (click)="cerrarDetalle()">Cerrar</ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content class="ion-padding" *ngIf="alumnoDetalle as alumno">
+        <h3>{{ alumno.nombre }} {{ alumno.apellido_paterno }} {{ alumno.apellido_materno }}</h3>
+        <div class="detalle-fila" *ngFor="let fila of detalleTipos(alumno.matricula)">
+          <span>{{ fila.etiqueta }}</span>
+          <strong>{{ fila.valor }}</strong>
+        </div>
+        <p class="empty" *ngIf="!detalleTipos(alumno.matricula).length">Aún no tiene calificaciones capturadas.</p>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+</ion-content>

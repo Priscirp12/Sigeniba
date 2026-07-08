@@ -1,92 +1,86 @@
-<ion-header>
-  <ion-toolbar>
-    <ion-buttons slot="start">
-      <ion-back-button defaultHref="/home"></ion-back-button>
-    </ion-buttons>
-    <ion-title>Panel de administración</ion-title>
-    <ion-buttons slot="end">
-      <ion-button (click)="cerrarSesion()">
-        <ion-icon slot="icon-only" name="log-out-outline"></ion-icon>
-      </ion-button>
-    </ion-buttons>
-  </ion-toolbar>
-</ion-header>
-
 <ion-content class="ion-padding admin-shell">
   <section class="hero-card">
     <div>
       <p class="eyebrow">Panel de administrador</p>
-      <h2>Gestión escolar y registro</h2>
-      <p>Administra alumnos, grupos y datos académicos desde un área exclusiva del sistema.</p>
+      <h2>Gestión escolar</h2>
+      <p>Administra alumnos, docentes, materias, grupos y fechas de captura desde un solo lugar.</p>
     </div>
-    <ion-button fill="outline" color="light" routerLink="/materias">
-      <ion-icon slot="start" name="school-outline"></ion-icon>
-      Ver materias
-    </ion-button>
   </section>
 
-  <div class="dashboard-grid">
+  <div class="summary-grid">
     <ion-card class="summary-card">
-      <ion-card-header>
-        <ion-card-title>Resumen rápido</ion-card-title>
-      </ion-card-header>
       <ion-card-content>
-        <div class="metric"><span>Alumnos activos</span><strong>128</strong></div>
-        <div class="metric"><span>Grupos</span><strong>12</strong></div>
-        <div class="metric"><span>Materias</span><strong>24</strong></div>
+        <span>Alumnos</span>
+        <strong>{{ totalAlumnos }}</strong>
       </ion-card-content>
     </ion-card>
-
-    <ion-card class="form-card">
-      <ion-card-header>
-        <ion-card-title>Registrar o editar alumno</ion-card-title>
-      </ion-card-header>
+    <ion-card class="summary-card">
       <ion-card-content>
-        <ion-list lines="none">
-          <ion-item>
-            <ion-label position="stacked">Nombre</ion-label>
-            <ion-input [(ngModel)]="alumno.nombre"></ion-input>
-          </ion-item>
-          <ion-item>
-            <ion-label position="stacked">Apellidos</ion-label>
-            <ion-input [(ngModel)]="alumno.apellidos"></ion-input>
-          </ion-item>
-          <ion-item>
-            <ion-label position="stacked">Matrícula</ion-label>
-            <ion-input [(ngModel)]="alumno.matricula"></ion-input>
-          </ion-item>
-          <ion-item>
-            <ion-label position="stacked">Correo</ion-label>
-            <ion-input type="email" [(ngModel)]="alumno.correo"></ion-input>
-          </ion-item>
-          <ion-item>
-            <ion-label position="stacked">Grupo</ion-label>
-            <ion-select [(ngModel)]="alumno.grupo">
-              <ion-select-option *ngFor="let grupo of grupos" [value]="grupo">{{ grupo }}</ion-select-option>
-            </ion-select>
-          </ion-item>
-          <ion-item>
-            <ion-label position="stacked">Turno</ion-label>
-            <ion-select [(ngModel)]="alumno.turno">
-              <ion-select-option *ngFor="let turno of turnos" [value]="turno">{{ turno }}</ion-select-option>
-            </ion-select>
-          </ion-item>
-          <ion-item>
-            <ion-label position="stacked">Estatus</ion-label>
-            <ion-select [(ngModel)]="alumno.estatus">
-              <ion-select-option *ngFor="let estado of estatus" [value]="estado">{{ estado }}</ion-select-option>
-            </ion-select>
-          </ion-item>
-        </ion-list>
-
-        <div class="actions">
-          <ion-button color="medium" fill="outline">Cancelar</ion-button>
-          <ion-button>
-            <ion-icon slot="start" name="create-outline"></ion-icon>
-            Guardar cambios
-          </ion-button>
-        </div>
+        <span>Docentes</span>
+        <strong>{{ totalDocentes }}</strong>
       </ion-card-content>
+    </ion-card>
+    <ion-card class="summary-card">
+      <ion-card-content>
+        <span>Materias</span>
+        <strong>{{ totalMaterias }}</strong>
+      </ion-card-content>
+    </ion-card>
+    <ion-card class="summary-card">
+      <ion-card-content>
+        <span>Grupos</span>
+        <strong>{{ totalGrupos }}</strong>
+      </ion-card-content>
+    </ion-card>
+  </div>
+
+  <div class="menu-grid">
+    <ion-card routerLink="/admin/alumnos" button="true">
+      <ion-card-header>
+        <ion-icon name="people-outline"></ion-icon>
+        <ion-card-title>Alumnos</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>Registrar y modificar alumnos.</ion-card-content>
+    </ion-card>
+
+    <ion-card routerLink="/admin/docentes" button="true">
+      <ion-card-header>
+        <ion-icon name="school-outline"></ion-icon>
+        <ion-card-title>Docentes</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>Registrar y modificar docentes.</ion-card-content>
+    </ion-card>
+
+    <ion-card routerLink="/admin/materias" button="true">
+      <ion-card-header>
+        <ion-icon name="book-outline"></ion-icon>
+        <ion-card-title>Materias</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>Dar de alta y renombrar materias.</ion-card-content>
+    </ion-card>
+
+    <ion-card routerLink="/admin/grupos" button="true">
+      <ion-card-header>
+        <ion-icon name="people-outline"></ion-icon>
+        <ion-card-title>Grupos</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>Crear grupos y asignar alumnos, tutores y materias.</ion-card-content>
+    </ion-card>
+
+    <ion-card routerLink="/admin/fechas" button="true">
+      <ion-card-header>
+        <ion-icon name="calendar-outline"></ion-icon>
+        <ion-card-title>Fechas de captura</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>Definir fechas de parciales, extraordinario e intersemestral.</ion-card-content>
+    </ion-card>
+
+    <ion-card routerLink="/admin/cuenta" button="true">
+      <ion-card-header>
+        <ion-icon name="key-outline"></ion-icon>
+        <ion-card-title>Mi cuenta</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>Cambiar mi usuario y contraseña.</ion-card-content>
     </ion-card>
   </div>
 </ion-content>

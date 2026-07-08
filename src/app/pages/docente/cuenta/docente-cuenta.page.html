@@ -1,0 +1,32 @@
+<ion-content class="ion-padding docente-shell">
+  <div class="page-header">
+    <h1>Mi cuenta</h1>
+  </div>
+
+  <ion-list lines="none">
+    <ion-item>
+      <ion-label position="stacked">Usuario actual</ion-label>
+      <ion-input [value]="usuarioActual" [disabled]="true"></ion-input>
+    </ion-item>
+    <ion-item>
+      <ion-label position="stacked">Contraseña actual</ion-label>
+      <ion-input type="password" [(ngModel)]="passwordActual"></ion-input>
+    </ion-item>
+    <ion-item>
+      <ion-label position="stacked">Nuevo usuario (opcional)</ion-label>
+      <ion-input [(ngModel)]="nuevoUsuario"></ion-input>
+    </ion-item>
+    <ion-item>
+      <ion-label position="stacked">Nueva contraseña (opcional)</ion-label>
+      <ion-input type="password" [(ngModel)]="nuevaPassword"></ion-input>
+    </ion-item>
+    <ion-item>
+      <ion-label position="stacked">Confirmar nueva contraseña</ion-label>
+      <ion-input type="password" [(ngModel)]="confirmarPassword"></ion-input>
+    </ion-item>
+  </ion-list>
+
+  <div class="actions">
+    <ion-button [disabled]="guardando" (click)="guardar()">Guardar cambios</ion-button>
+  </div>
+</ion-content>

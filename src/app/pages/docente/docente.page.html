@@ -1,0 +1,29 @@
+<ion-content class="ion-padding docente-shell">
+  <div class="page-header">
+    <h1>Inicio</h1>
+  </div>
+
+  <div class="menu-grid">
+    <ion-card routerLink="/docente/materias" button="true">
+      <ion-card-header>
+        <ion-icon name="book-outline"></ion-icon>
+        <ion-card-title>Materias Asignadas</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <strong>{{ totalMaterias }}</strong>
+        <span>materia(s) a tu cargo</span>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card routerLink="/docente/grupos" button="true">
+      <ion-card-header>
+        <ion-icon name="people-outline"></ion-icon>
+        <ion-card-title>Grupos Asignados</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <strong>{{ totalGrupos }}</strong>
+        <span>grupo(s) donde impartes clase</span>
+      </ion-card-content>
+    </ion-card>
+  </div>
+</ion-content>

@@ -1,0 +1,62 @@
+<ion-content class="ion-padding admin-shell">
+  <div class="page-header">
+    <h1>Fechas de captura</h1>
+    <ion-button (click)="mostrarNuevoPeriodo = !mostrarNuevoPeriodo">
+      <ion-icon slot="start" name="add-outline"></ion-icon>
+      Nuevo periodo
+    </ion-button>
+  </div>
+
+  <ion-list lines="none" *ngIf="mostrarNuevoPeriodo">
+    <h3>Nuevo periodo escolar</h3>
+    <ion-item>
+      <ion-label position="stacked">Ciclo escolar</ion-label>
+      <ion-input [(ngModel)]="nuevoCicloEscolar" placeholder="Ej. 2025-2026"></ion-input>
+    </ion-item>
+    <ion-item>
+      <ion-label position="stacked">Fecha de inicio</ion-label>
+      <ion-input type="date" [(ngModel)]="nuevaFechaInicio"></ion-input>
+    </ion-item>
+    <ion-item>
+      <ion-label position="stacked">Fecha de fin</ion-label>
+      <ion-input type="date" [(ngModel)]="nuevaFechaFin"></ion-input>
+    </ion-item>
+    <div class="actions">
+      <ion-button [disabled]="creandoPeriodo" (click)="crearPeriodo()">Crear periodo</ion-button>
+    </div>
+  </ion-list>
+
+  <ion-item>
+    <ion-label position="stacked">Periodo escolar</ion-label>
+    <ion-select [(ngModel)]="periodoSeleccionado" (ionChange)="onPeriodoChange()">
+      <ion-select-option *ngFor="let periodo of periodos" [value]="periodo.id_periodo">{{ periodo.ciclo_escolar }}</ion-select-option>
+    </ion-select>
+  </ion-item>
+
+  <ion-item *ngIf="!periodos.length">
+    <ion-label class="empty">Aún no hay periodos escolares. Crea uno con el botón "+".</ion-label>
+  </ion-item>
+
+  <div class="table-wrapper" *ngIf="periodoSeleccionado">
+    <table>
+      <thead>
+        <tr>
+          <th>Evaluación</th>
+          <th>Fecha de inicio</th>
+          <th>Fecha de fin</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let fila of filas">
+          <td>{{ fila.etiqueta }}</td>
+          <td><ion-input type="date" [(ngModel)]="fila.fecha_inicio"></ion-input></td>
+          <td><ion-input type="date" [(ngModel)]="fila.fecha_fin"></ion-input></td>
+          <td>
+            <ion-button size="small" [disabled]="fila.guardando" (click)="guardarVentana(fila)">Guardar</ion-button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</ion-content>

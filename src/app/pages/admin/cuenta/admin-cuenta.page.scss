@@ -1,0 +1,28 @@
+.admin-shell {
+  --background: #f4f7fb;
+}
+
+.page-header {
+  margin-bottom: 1rem;
+}
+
+.page-header h1 {
+  margin: 0;
+  color: #0f3d67;
+  font-size: 1.3rem;
+  font-weight: 800;
+}
+
+ion-item {
+  --background: #f9fbfd;
+  border-radius: 14px;
+  margin-bottom: 0.6rem;
+  --padding-start: 0.85rem;
+  --inner-padding-end: 0.85rem;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1rem;
+}
