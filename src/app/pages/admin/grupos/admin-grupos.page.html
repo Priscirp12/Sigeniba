@@ -34,13 +34,6 @@
       </ion-select>
     </ion-item>
     <ion-item>
-      <ion-label position="stacked">Turno</ion-label>
-      <ion-select [(ngModel)]="turnoGrupo">
-        <ion-select-option value="Matutino">Matutino</ion-select-option>
-        <ion-select-option value="Vespertino">Vespertino</ion-select-option>
-      </ion-select>
-    </ion-item>
-    <ion-item>
       <ion-label position="stacked">Tutor (opcional)</ion-label>
       <ion-select [(ngModel)]="claveTutorGrupo">
         <ion-select-option [value]="null">Sin asignar</ion-select-option>
@@ -59,7 +52,7 @@
     </div>
     <ion-item *ngFor="let grupo of gruposFiltrados">
       <ion-label>
-        {{ grupo.nombre }} — Semestre {{ grupo.semestre }} — {{ grupo.turno ?? 'Sin turno' }}
+        {{ grupo.nombre }} — Semestre {{ grupo.semestre }}
         <p *ngIf="grupo.tutor_nombre">Tutor: {{ grupo.tutor_nombre }} {{ grupo.tutor_apellido_paterno }}</p>
         <p *ngIf="!grupo.tutor_nombre">Sin tutor asignado</p>
       </ion-label>
@@ -71,10 +64,18 @@
 
   <!-- Asignar / cambiar alumnos de grupo -->
   <div *ngIf="segmento === 'alumnos'">
+    <p class="aviso-semestre">
+      Solo se puede cambiar de grupo a un alumno cuando su periodo escolar no está en curso (es decir, entre
+      semestres). Si el periodo del alumno sigue activo, el cambio se omitirá automáticamente.
+    </p>
+
     <div class="filtros">
       <ion-item>
-        <ion-label position="stacked">Generación</ion-label>
-        <ion-input [(ngModel)]="filtroGeneracion" (ionChange)="buscarAlumnos()"></ion-input>
+        <ion-label position="stacked">Periodo</ion-label>
+        <ion-select [(ngModel)]="filtroPeriodo" (ionChange)="buscarAlumnos()" interface="popover">
+          <ion-select-option [value]="null">Todos</ion-select-option>
+          <ion-select-option *ngFor="let periodo of periodos" [value]="periodo.id_periodo">{{ periodo.ciclo_escolar }}</ion-select-option>
+        </ion-select>
       </ion-item>
       <ion-item>
         <ion-label position="stacked">Semestre</ion-label>
@@ -92,7 +93,7 @@
             <th></th>
             <th>Matrícula</th>
             <th>Nombre</th>
-            <th>Generación</th>
+            <th>Periodo</th>
             <th>Grupo actual</th>
           </tr>
         </thead>
@@ -103,7 +104,7 @@
             </td>
             <td>{{ alumno.matricula }}</td>
             <td>{{ alumno.nombre }} {{ alumno.apellido_paterno }}</td>
-            <td>{{ alumno.generacion ?? '-' }}</td>
+            <td>{{ periodoNombre(alumno.id_periodo) }}</td>
             <td>{{ alumno.grupo_nombre ?? 'Sin grupo' }}</td>
           </tr>
           <tr *ngIf="!alumnos.length">
@@ -171,12 +172,28 @@
     </ion-item>
 
     <ng-container *ngIf="docenteSeleccionado">
-      <ion-item>
+      <div class="materia-picker">
         <ion-label position="stacked">Materia</ion-label>
-        <ion-select [(ngModel)]="materiaSeleccionada">
-          <ion-select-option *ngFor="let materia of materias" [value]="materia.id_materia">{{ materia.nombre }}</ion-select-option>
-        </ion-select>
-      </ion-item>
+        <ion-searchbar
+          [(ngModel)]="filtroMateriaTexto"
+          placeholder="Buscar materia"
+          showClearButton="always"
+        ></ion-searchbar>
+        <p class="materia-actual" *ngIf="materiaSeleccionadaNombre">Seleccionada: {{ materiaSeleccionadaNombre }}</p>
+        <div class="materia-lista">
+          <ion-item
+            *ngFor="let materia of materiasFiltradasParaAsignar"
+            button="true"
+            [class.seleccionada]="materia.id_materia === materiaSeleccionada"
+            (click)="seleccionarMateria(materia.id_materia)"
+          >
+            <ion-label>{{ materia.nombre }}</ion-label>
+          </ion-item>
+          <ion-item *ngIf="!materiasFiltradasParaAsignar.length">
+            <ion-label class="empty">Sin resultados.</ion-label>
+          </ion-item>
+        </div>
+      </div>
       <ion-item>
         <ion-label position="stacked">Grupo</ion-label>
         <ion-select [(ngModel)]="grupoParaAsignacion">

@@ -10,19 +10,31 @@
     </ion-item>
     <ion-item>
       <ion-label position="stacked">Contraseña actual</ion-label>
-      <ion-input type="password" [(ngModel)]="passwordActual"></ion-input>
+      <ion-input type="password" autocomplete="new-password" [(ngModel)]="passwordActual"></ion-input>
     </ion-item>
     <ion-item>
       <ion-label position="stacked">Nuevo usuario (opcional)</ion-label>
-      <ion-input [(ngModel)]="nuevoUsuario"></ion-input>
+      <ion-input autocomplete="off" [(ngModel)]="nuevoUsuario"></ion-input>
     </ion-item>
     <ion-item>
       <ion-label position="stacked">Nueva contraseña (opcional)</ion-label>
-      <ion-input type="password" [(ngModel)]="nuevaPassword"></ion-input>
+      <ion-input [type]="mostrarNuevaPassword ? 'text' : 'password'" autocomplete="new-password" [(ngModel)]="nuevaPassword">
+        <ion-icon
+          slot="end"
+          [name]="mostrarNuevaPassword ? 'eye-off-outline' : 'eye-outline'"
+          (click)="mostrarNuevaPassword = !mostrarNuevaPassword"
+        ></ion-icon>
+      </ion-input>
     </ion-item>
     <ion-item>
       <ion-label position="stacked">Confirmar nueva contraseña</ion-label>
-      <ion-input type="password" [(ngModel)]="confirmarPassword"></ion-input>
+      <ion-input [type]="mostrarConfirmarPassword ? 'text' : 'password'" autocomplete="new-password" [(ngModel)]="confirmarPassword">
+        <ion-icon
+          slot="end"
+          [name]="mostrarConfirmarPassword ? 'eye-off-outline' : 'eye-outline'"
+          (click)="mostrarConfirmarPassword = !mostrarConfirmarPassword"
+        ></ion-icon>
+      </ion-input>
     </ion-item>
   </ion-list>
 

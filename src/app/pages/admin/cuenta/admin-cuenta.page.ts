@@ -2,7 +2,9 @@ import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { IonButton, IonContent, IonInput, IonItem, IonLabel, IonList, ToastController } from '@ionic/angular/standalone';
+import { IonButton, IonContent, IonIcon, IonInput, IonItem, IonLabel, IonList, ToastController } from '@ionic/angular/standalone';
+import { addIcons } from 'ionicons';
+import { eyeOffOutline, eyeOutline } from 'ionicons/icons';
 import { AdminService } from '../../../services/admin.service';
 import { AuthService } from '../../../services/auth.service';
 
@@ -10,7 +12,7 @@ import { AuthService } from '../../../services/auth.service';
   selector: 'app-admin-cuenta',
   templateUrl: './admin-cuenta.page.html',
   styleUrls: ['./admin-cuenta.page.scss'],
-  imports: [CommonModule, FormsModule, IonContent, IonButton, IonList, IonItem, IonLabel, IonInput],
+  imports: [CommonModule, FormsModule, IonContent, IonButton, IonIcon, IonList, IonItem, IonLabel, IonInput],
 })
 export class AdminCuentaPage {
   usuarioActual = this.authService.user?.id_usuario ?? '';
@@ -20,12 +22,17 @@ export class AdminCuentaPage {
   confirmarPassword = '';
   guardando = false;
 
+  mostrarNuevaPassword = false;
+  mostrarConfirmarPassword = false;
+
   constructor(
     private readonly adminService: AdminService,
     private readonly authService: AuthService,
     private readonly router: Router,
     private readonly toastController: ToastController,
-  ) {}
+  ) {
+    addIcons({ eyeOutline, eyeOffOutline });
+  }
 
   async guardar(): Promise<void> {
     if (!this.passwordActual) {

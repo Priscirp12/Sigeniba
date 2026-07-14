@@ -14,7 +14,7 @@
     <ion-item *ngFor="let materia of materiasFiltradas" button="true" (click)="abrirEditar(materia)">
       <ion-label>
         {{ materia.nombre }}
-        <p>{{ materia.clave ?? 'Sin clave' }} · {{ materia.horas_semana ?? '-' }} hrs/semana</p>
+        <p>{{ materia.clave ?? 'Sin clave' }} · {{ materia.horas_semana ?? '-' }} hrs/semana · {{ materia.semestre ? 'Semestre ' + materia.semestre : 'Sin semestre' }}</p>
       </ion-label>
       <ion-icon slot="end" name="create-outline"></ion-icon>
     </ion-item>
@@ -47,13 +47,12 @@
             <ion-label position="stacked">Horas por semana</ion-label>
             <ion-input type="number" [(ngModel)]="horasSemana"></ion-input>
           </ion-item>
-          <ion-item *ngIf="!modoEdicion">
-            <ion-label position="stacked">Periodo</ion-label>
-            <ion-select [(ngModel)]="idPeriodo" interface="popover">
-              <ion-select-option [value]="null">Sin periodo</ion-select-option>
-              <ion-select-option *ngFor="let periodo of periodos" [value]="periodo.id_periodo">{{ periodo.ciclo_escolar }}</ion-select-option>
+          <ion-item>
+            <ion-label position="stacked">Semestre</ion-label>
+            <ion-select [(ngModel)]="semestre" interface="popover">
+              <ion-select-option [value]="null">Sin semestre</ion-select-option>
+              <ion-select-option *ngFor="let s of [1, 2, 3, 4, 5, 6]" [value]="s">Semestre {{ s }}</ion-select-option>
             </ion-select>
-            <ion-note *ngIf="!periodos.length">Aún no hay periodos escolares. Crea uno en "Fechas de captura".</ion-note>
           </ion-item>
         </ion-list>
 

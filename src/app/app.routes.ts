@@ -101,9 +101,16 @@ export const routes: Routes = [
   },
   {
     path: 'alumno',
-    loadComponent: () => import('./pages/alumno/alumno.page').then((m) => m.AlumnoPage),
+    loadComponent: () => import('./pages/alumno/alumno-shell.page').then((m) => m.AlumnoShellPage),
     canActivate: [authGuard],
     data: { roles: ['alumno'] },
+    children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import('./pages/alumno/calificaciones/alumno-calificaciones.page').then((m) => m.AlumnoCalificacionesPage),
+      },
+    ],
   },
   {
     path: '',

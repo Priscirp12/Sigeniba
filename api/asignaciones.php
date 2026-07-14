@@ -10,7 +10,7 @@ if ($method === 'GET') {
 
     $sql = 'SELECT asa.id_asignacion, asa.id_grupo, asa.id_materia, asa.id_docente, asa.id_periodo,
                    m.nombre AS materia_nombre, m.clave AS materia_clave, m.horas_semana,
-                   g.nombre AS grupo_nombre, g.semestre, g.turno,
+                   g.nombre AS grupo_nombre, g.semestre,
                    p.ciclo_escolar
             FROM asignaciones_academicas asa
             LEFT JOIN materias m ON m.id_materia = asa.id_materia

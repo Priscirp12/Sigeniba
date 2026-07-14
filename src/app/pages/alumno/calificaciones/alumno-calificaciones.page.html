@@ -1,0 +1,68 @@
+<ion-content class="ion-padding alumno-shell">
+  <p class="breadcrumb">Calificaciones &gt; Actuales</p>
+  <h1>Calificaciones Actuales</h1>
+
+  <div class="tarjetas">
+    <ion-card *ngFor="let materia of materias" button="true" (click)="verDetalle(materia)">
+      <ion-card-header>
+        <ion-card-title>{{ materia.materia_nombre }}</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <p class="promedio">{{ materia.promedio !== null ? (materia.promedio + ' / 10') : 'Sin calificaciones' }}</p>
+        <p class="docente">{{ materia.docente_nombre || 'Docente sin asignar' }}</p>
+        <ion-icon name="eye-outline"></ion-icon>
+      </ion-card-content>
+    </ion-card>
+
+    <p class="empty" *ngIf="!cargando && !materias.length">Aún no tienes materias asignadas.</p>
+  </div>
+
+  <ion-modal [isOpen]="!!materiaSeleccionada" (didDismiss)="cerrarDetalle()">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar>
+          <ion-title *ngIf="materiaSeleccionada as materia">{{ materia.materia_nombre }}</ion-title>
+          <ion-buttons slot="end">
+            <ion-button (click)="cerrarDetalle()">Cerrar</ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content class="ion-padding" *ngIf="materiaSeleccionada as materia">
+        <ng-container *ngFor="let tipo of tipos">
+          <ng-container *ngIf="materia.parciales[tipo] as parcial">
+            <h3>{{ etiquetasParcial[tipo] }}</h3>
+            <table class="tabla-criterios">
+              <thead>
+                <tr>
+                  <th>Criterio</th>
+                  <th>Valor</th>
+                  <th>Calificación obtenida</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let criterio of parcial.criterios">
+                  <td>{{ criterio.nombre }}</td>
+                  <td>{{ criterio.valor_puntos }}</td>
+                  <td>{{ criterio.obtenido ?? '-' }}</td>
+                </tr>
+                <tr class="fila-total">
+                  <td>Total</td>
+                  <td>10</td>
+                  <td>{{ parcial.suma }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </ng-container>
+        </ng-container>
+
+        <p class="sin-datos" *ngIf="!materia.parciales.parcial1 && !materia.parciales.parcial2 && !materia.parciales.parcial3">
+          Aún no hay calificaciones capturadas para esta materia.
+        </p>
+
+        <div class="calificacion-final" *ngIf="materia.promedio !== null">
+          Calificación final: <strong>{{ materia.promedio }} / 10</strong>
+        </div>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+</ion-content>

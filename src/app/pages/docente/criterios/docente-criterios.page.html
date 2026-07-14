@@ -6,74 +6,177 @@
   <div class="selectores">
     <ion-item>
       <ion-label position="stacked">Materia / Grupo</ion-label>
-      <ion-select [(ngModel)]="idAsignacionSeleccionada" (ionChange)="onCambio()">
+      <ion-select [(ngModel)]="idAsignacionSeleccionada" (ionChange)="onCambioAsignacion()">
         <ion-select-option *ngFor="let a of asignaciones" [value]="a.id_asignacion">
           {{ a.materia_nombre }} — {{ a.grupo_nombre }}
         </ion-select-option>
       </ion-select>
     </ion-item>
+  </div>
+
+  <ion-segment [value]="modo" (ionChange)="cambiarModo($any($event.detail.value))" class="modo-segment">
+    <ion-segment-button value="regulares">Parciales regulares</ion-segment-button>
+    <ion-segment-button value="especiales">Extraordinario / Intersemestral</ion-segment-button>
+  </ion-segment>
+
+  <!-- Parciales regulares: los tres juntos en una sola tabla -->
+  <ng-container *ngIf="modo === 'regulares'">
+    <div class="sumas-parciales">
+      <span class="suma" *ngFor="let panel of paneles" [class.completa]="sumaPanel(panel) === 10" [class.excedida]="sumaPanel(panel) > 10">
+        {{ panel.etiqueta }}: {{ sumaPanel(panel) }} / 10 puntos
+        <ion-icon *ngIf="panel.tieneCalificaciones" name="lock-closed-outline" title="Bloqueado: ya tiene calificaciones"></ion-icon>
+      </span>
+    </div>
+
+    <div class="agregar">
+      <ion-item>
+        <ion-label position="stacked">Parcial</ion-label>
+        <ion-select [(ngModel)]="nuevoParcial">
+          <ion-select-option *ngFor="let panel of paneles" [value]="panel.tipo">{{ panel.etiqueta }}</ion-select-option>
+        </ion-select>
+      </ion-item>
+      <ng-container *ngIf="!panelSeleccionado?.tieneCalificaciones; else bloqueadoRegular">
+        <ion-item>
+          <ion-label position="stacked">Nombre del criterio</ion-label>
+          <ion-input [(ngModel)]="nuevoNombre" placeholder="Ej. Tareas"></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-label position="stacked">Puntos</ion-label>
+          <ion-input type="number" [(ngModel)]="nuevoValor"></ion-input>
+        </ion-item>
+        <ion-button [disabled]="guardando" (click)="agregarCriterioRegular()">
+          <ion-icon slot="start" name="add-outline"></ion-icon>
+          Agregar criterio
+        </ion-button>
+      </ng-container>
+      <ng-template #bloqueadoRegular>
+        <p class="bloqueado-msg">
+          Este parcial ya tiene calificaciones capturadas. Para modificar sus criterios, primero vacíalas desde
+          Captura de Calificaciones.
+        </p>
+      </ng-template>
+    </div>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Parcial</th>
+            <th>Criterio</th>
+            <th>Puntos</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let fila of criteriosCombinados">
+            <td>{{ fila.etiquetaParcial }}</td>
+            <td>{{ fila.criterio.nombre }} <span class="tag" *ngIf="fila.criterio.es_examen">Fijo</span></td>
+            <td>
+              <ng-container *ngIf="editandoId !== fila.criterio.id_criterio">{{ fila.criterio.valor_puntos }}</ng-container>
+              <ion-input
+                *ngIf="editandoId === fila.criterio.id_criterio"
+                type="number"
+                [max]="fila.criterio.es_examen ? 5 : 10"
+                [(ngModel)]="valorEditado"
+              ></ion-input>
+            </td>
+            <td class="acciones">
+              <ng-container *ngIf="estaBloqueado(fila.criterio.tipo)">
+                <span class="tag bloqueado">Bloqueado</span>
+              </ng-container>
+              <ng-container *ngIf="!estaBloqueado(fila.criterio.tipo) && editandoId !== fila.criterio.id_criterio">
+                <ion-button size="small" fill="clear" (click)="editarValor(fila.criterio)">Editar</ion-button>
+                <ion-button size="small" fill="clear" color="danger" *ngIf="!fila.criterio.es_examen" (click)="eliminarCriterio(fila.criterio)">
+                  <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+                </ion-button>
+              </ng-container>
+              <ng-container *ngIf="!estaBloqueado(fila.criterio.tipo) && editandoId === fila.criterio.id_criterio">
+                <ion-button size="small" (click)="guardarEdicion(fila.criterio)">Guardar</ion-button>
+                <ion-button size="small" fill="outline" color="medium" (click)="cancelarEdicion()">Cancelar</ion-button>
+              </ng-container>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </ng-container>
+
+  <!-- Extraordinario / Intersemestral -->
+  <ng-container *ngIf="modo === 'especiales'">
     <ion-item>
-      <ion-label position="stacked">Evaluación</ion-label>
-      <ion-select [(ngModel)]="tipoSeleccionado" (ionChange)="onCambio()">
-        <ion-select-option *ngFor="let tipo of tipos" [value]="tipo.valor">{{ tipo.etiqueta }}</ion-select-option>
+      <ion-label position="stacked">Evaluación especial</ion-label>
+      <ion-select [(ngModel)]="tipoEspecial" (ionChange)="cargarCriteriosEspecial()">
+        <ion-select-option *ngFor="let tipo of especiales" [value]="tipo.tipo">{{ tipo.etiqueta }}</ion-select-option>
       </ion-select>
     </ion-item>
-  </div>
 
-  <div class="suma" [class.completa]="sumaActual === 10" [class.excedida]="sumaActual > 10">
-    Suma actual: {{ sumaActual }} / 10 puntos
-  </div>
+    <span class="suma" [class.completa]="sumaEspecial === 10" [class.excedida]="sumaEspecial > 10">
+      Suma actual: {{ sumaEspecial }} / 10 puntos
+      <ion-icon *ngIf="especialTieneCalificaciones" name="lock-closed-outline" title="Bloqueado: ya tiene calificaciones"></ion-icon>
+    </span>
 
-  <div class="table-wrapper">
-    <table>
-      <thead>
-        <tr>
-          <th>Criterio</th>
-          <th>Puntos</th>
-          <th>Acciones</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let criterio of criterios">
-          <td>{{ criterio.nombre }} <span class="tag" *ngIf="criterio.es_examen">Fijo</span></td>
-          <td>
-            <ng-container *ngIf="editandoId !== criterio.id_criterio">{{ criterio.valor_puntos }}</ng-container>
-            <ion-input
-              *ngIf="editandoId === criterio.id_criterio"
-              type="number"
-              [max]="criterio.es_examen ? 5 : 10"
-              [(ngModel)]="valorEditado"
-            ></ion-input>
-          </td>
-          <td class="acciones">
-            <ng-container *ngIf="editandoId !== criterio.id_criterio">
-              <ion-button size="small" fill="clear" (click)="editarValor(criterio)">Editar</ion-button>
-              <ion-button size="small" fill="clear" color="danger" *ngIf="!criterio.es_examen" (click)="eliminarCriterio(criterio)">
-                <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
-              </ion-button>
-            </ng-container>
-            <ng-container *ngIf="editandoId === criterio.id_criterio">
-              <ion-button size="small" (click)="guardarEdicion(criterio)">Guardar</ion-button>
-              <ion-button size="small" fill="outline" color="medium" (click)="cancelarEdicion()">Cancelar</ion-button>
-            </ng-container>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+    <div class="agregar">
+      <ng-container *ngIf="!especialTieneCalificaciones; else bloqueadoEspecial">
+        <ion-item>
+          <ion-label position="stacked">Nombre del criterio</ion-label>
+          <ion-input [(ngModel)]="nuevoNombreEspecial" placeholder="Ej. Examen extraordinario"></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-label position="stacked">Puntos</ion-label>
+          <ion-input type="number" [(ngModel)]="nuevoValorEspecial"></ion-input>
+        </ion-item>
+        <ion-button [disabled]="guardando" (click)="agregarCriterioEspecial()">
+          <ion-icon slot="start" name="add-outline"></ion-icon>
+          Agregar criterio
+        </ion-button>
+      </ng-container>
+      <ng-template #bloqueadoEspecial>
+        <p class="bloqueado-msg">
+          Esta evaluación ya tiene calificaciones capturadas. Para modificar sus criterios, primero vacíalas desde
+          Captura de Calificaciones.
+        </p>
+      </ng-template>
+    </div>
 
-  <div class="agregar">
-    <ion-item>
-      <ion-label position="stacked">Nombre del criterio</ion-label>
-      <ion-input [(ngModel)]="nuevoNombre" placeholder="Ej. Tareas"></ion-input>
-    </ion-item>
-    <ion-item>
-      <ion-label position="stacked">Puntos</ion-label>
-      <ion-input type="number" [(ngModel)]="nuevoValor"></ion-input>
-    </ion-item>
-    <ion-button [disabled]="guardando" (click)="agregarCriterio()">
-      <ion-icon slot="start" name="add-outline"></ion-icon>
-      Agregar criterio
-    </ion-button>
-  </div>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Criterio</th>
+            <th>Puntos</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let criterio of criteriosEspecial">
+            <td>{{ criterio.nombre }} <span class="tag" *ngIf="criterio.es_examen">Fijo</span></td>
+            <td>
+              <ng-container *ngIf="editandoId !== criterio.id_criterio">{{ criterio.valor_puntos }}</ng-container>
+              <ion-input
+                *ngIf="editandoId === criterio.id_criterio"
+                type="number"
+                [max]="criterio.es_examen ? 5 : 10"
+                [(ngModel)]="valorEditado"
+              ></ion-input>
+            </td>
+            <td class="acciones">
+              <ng-container *ngIf="especialTieneCalificaciones">
+                <span class="tag bloqueado">Bloqueado</span>
+              </ng-container>
+              <ng-container *ngIf="!especialTieneCalificaciones && editandoId !== criterio.id_criterio">
+                <ion-button size="small" fill="clear" (click)="editarValor(criterio)">Editar</ion-button>
+                <ion-button size="small" fill="clear" color="danger" *ngIf="!criterio.es_examen" (click)="eliminarCriterio(criterio)">
+                  <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+                </ion-button>
+              </ng-container>
+              <ng-container *ngIf="!especialTieneCalificaciones && editandoId === criterio.id_criterio">
+                <ion-button size="small" (click)="guardarEdicion(criterio)">Guardar</ion-button>
+                <ion-button size="small" fill="outline" color="medium" (click)="cancelarEdicion()">Cancelar</ion-button>
+              </ng-container>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </ng-container>
 </ion-content>

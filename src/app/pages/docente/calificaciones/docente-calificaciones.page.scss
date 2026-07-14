@@ -149,3 +149,66 @@ td ion-input {
   justify-content: flex-end;
   margin-top: 1.25rem;
 }
+
+.modo-segment {
+  margin-bottom: 1.25rem;
+  max-width: 480px;
+}
+
+.ventanas-parciales {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.ventana-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #fff;
+  border-radius: 999px;
+  padding: 0.3rem 0.5rem 0.3rem 1rem;
+  box-shadow: 0 4px 14px rgba(15, 61, 103, 0.08);
+}
+
+.ventana-chip .etiqueta {
+  font-weight: 700;
+  color: #0f3d67;
+}
+
+.ventana-chip .estado {
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+}
+
+.ventana-chip .estado.abierta {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.ventana-chip .estado.cerrada {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.tabla-criterios .aviso,
+p.aviso {
+  color: #92400e;
+  background: #fef3c7;
+  border-radius: 12px;
+  padding: 0.6rem 0.9rem;
+  margin: 0 0 0.75rem;
+  font-size: 0.85rem;
+}
+
+h3 {
+  color: #0f3d67;
+  margin: 1.25rem 0 0.5rem;
+}
+
+h3:first-child {
+  margin-top: 0;
+}

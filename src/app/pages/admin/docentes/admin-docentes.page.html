@@ -99,7 +99,7 @@
           </ion-item>
           <ion-item>
             <ion-label position="stacked">{{ modoEdicion ? 'Nueva contraseña (opcional)' : 'Contraseña' }}</ion-label>
-            <ion-input type="password" [(ngModel)]="form.password"></ion-input>
+            <ion-input type="password" autocomplete="new-password" [(ngModel)]="form.password"></ion-input>
           </ion-item>
         </ion-list>
 

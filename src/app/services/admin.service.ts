@@ -6,7 +6,6 @@ export interface AlumnoAdmin {
   id_usuario: string;
   id_grupo: string | null;
   id_periodo: string | null;
-  generacion: string | null;
   email: string | null;
   telefono: string | null;
   nombre: string;
@@ -36,14 +35,13 @@ export interface MateriaAdmin {
   nombre: string;
   clave: string | null;
   horas_semana: number | null;
-  id_periodo: string | null;
+  semestre: number | null;
 }
 
 export interface GrupoAdmin {
   id_grupo: string;
   nombre: string;
   semestre: number;
-  turno: 'Matutino' | 'Vespertino' | null;
   clave_tutor: string | null;
   tutor_nombre?: string | null;
   tutor_apellido_paterno?: string | null;
@@ -77,7 +75,7 @@ export interface VentanaCaptura {
 }
 
 export interface AlumnoFiltro {
-  generacion?: string;
+  id_periodo?: string;
   semestre?: number | string;
   id_grupo?: string;
   sin_grupo?: boolean;
@@ -92,7 +90,7 @@ export class AdminService {
   // Alumnos
   async getAlumnos(filtro: AlumnoFiltro = {}): Promise<AlumnoAdmin[]> {
     const params = new URLSearchParams();
-    if (filtro.generacion) params.set('generacion', filtro.generacion);
+    if (filtro.id_periodo) params.set('id_periodo', filtro.id_periodo);
     if (filtro.semestre) params.set('semestre', String(filtro.semestre));
     if (filtro.id_grupo) params.set('id_grupo', filtro.id_grupo);
     if (filtro.sin_grupo) params.set('sin_grupo', '1');
@@ -143,7 +141,10 @@ export class AdminService {
     return this.api.post('grupos.php', payload);
   }
 
-  async asignarAlumnosAGrupo(idGrupo: string, matriculas: string[]): Promise<{ success: boolean; actualizados: number }> {
+  async asignarAlumnosAGrupo(
+    idGrupo: string,
+    matriculas: string[],
+  ): Promise<{ success: boolean; actualizados: number; omitidos: number }> {
     return this.api.put('grupos.php?action=asignar_alumnos', { id_grupo: idGrupo, matriculas });
   }
 

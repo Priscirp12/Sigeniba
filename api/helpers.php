@@ -45,3 +45,13 @@ function ventana_captura_estado(PDO $pdo, ?string $idPeriodo, string $tipo): arr
 
     return ['abierta' => $abierta, 'fecha_inicio' => $ventana['fecha_inicio'], 'fecha_fin' => $ventana['fecha_fin']];
 }
+
+function tiene_calificaciones_capturadas(PDO $pdo, string $idAsignacion, string $tipo): bool
+{
+    $stmt = $pdo->prepare('SELECT COUNT(*) AS total
+                            FROM calificaciones_criterios cc
+                            JOIN criterios_evaluacion c ON c.id_criterio = cc.id_criterio
+                            WHERE c.id_asignacion = ? AND c.tipo = ?');
+    $stmt->execute([$idAsignacion, $tipo]);
+    return (int) $stmt->fetch()['total'] > 0;
+}

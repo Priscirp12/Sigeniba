@@ -32,7 +32,6 @@ interface AlumnoForm {
   sexo: 'M' | 'F';
   edad: number | null;
   password: string;
-  generacion: string;
   email: string;
   telefono: string;
   id_periodo: string | null;
@@ -46,7 +45,6 @@ const FORM_VACIO: AlumnoForm = {
   sexo: 'F',
   edad: null,
   password: '',
-  generacion: '',
   email: '',
   telefono: '',
   id_periodo: null,
@@ -140,7 +138,6 @@ export class AdminAlumnosPage {
       sexo: alumno.sexo ?? 'F',
       edad: alumno.edad,
       password: '',
-      generacion: alumno.generacion ?? '',
       email: alumno.email ?? '',
       telefono: alumno.telefono ?? '',
       id_periodo: alumno.id_periodo,
@@ -189,7 +186,6 @@ export class AdminAlumnosPage {
           apellido_materno: this.form.apellido_materno,
           sexo: this.form.sexo,
           edad: this.form.edad,
-          generacion: this.form.generacion,
           email: this.form.email,
           telefono: this.form.telefono,
           id_periodo: this.form.id_periodo,

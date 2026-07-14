@@ -6,7 +6,7 @@ $method = $_SERVER['REQUEST_METHOD'];
 $action = $_GET['action'] ?? null;
 
 if ($method === 'GET') {
-    $stmt = $pdo->query('SELECT g.id_grupo, g.nombre, g.semestre, g.turno, g.clave_tutor,
+    $stmt = $pdo->query('SELECT g.id_grupo, g.nombre, g.semestre, g.clave_tutor,
                                  u.nombre AS tutor_nombre, u.apellido_paterno AS tutor_apellido_paterno
                           FROM grupos g
                           LEFT JOIN docentes d ON d.id_docente = g.clave_tutor
@@ -20,7 +20,6 @@ if ($method === 'POST') {
     $data = read_json_body();
     $nombre = trim($data['nombre'] ?? '');
     $semestre = $data['semestre'] ?? null;
-    $turno = $data['turno'] ?? null;
     $claveTutor = $data['clave_tutor'] ?? null;
 
     if (!$nombre || !$semestre) {
@@ -28,8 +27,8 @@ if ($method === 'POST') {
     }
 
     $idGrupo = generate_id('GRP');
-    $stmt = $pdo->prepare('INSERT INTO grupos (id_grupo, nombre, semestre, turno, clave_tutor) VALUES (?, ?, ?, ?, ?)');
-    $stmt->execute([$idGrupo, $nombre, $semestre, $turno, $claveTutor]);
+    $stmt = $pdo->prepare('INSERT INTO grupos (id_grupo, nombre, semestre, clave_tutor) VALUES (?, ?, ?, ?)');
+    $stmt->execute([$idGrupo, $nombre, $semestre, $claveTutor]);
 
     echo json_encode(['success' => true, 'id_grupo' => $idGrupo]);
     exit;
@@ -45,10 +44,20 @@ if ($method === 'PUT' && $action === 'asignar_alumnos') {
     }
 
     $placeholders = implode(',', array_fill(0, count($matriculas), '?'));
-    $stmt = $pdo->prepare("UPDATE alumnos SET id_grupo = ? WHERE matricula IN ($placeholders)");
-    $stmt->execute(array_merge([$idGrupo], $matriculas));
 
-    echo json_encode(['success' => true, 'actualizados' => $stmt->rowCount()]);
+    // Solo se permite cambiar de grupo a un alumno cuando su periodo escolar
+    // no está en curso (es decir, entre semestres). Si el periodo del alumno
+    // está activo hoy, esa fila se omite silenciosamente.
+    $stmt = $pdo->prepare("UPDATE alumnos a
+                            LEFT JOIN periodos_escolares p ON p.id_periodo = a.id_periodo
+                            SET a.id_grupo = ?
+                            WHERE a.matricula IN ($placeholders)
+                              AND (a.id_periodo IS NULL OR CURDATE() < p.fecha_inicio OR CURDATE() > p.fecha_fin)");
+    $stmt->execute(array_merge([$idGrupo], $matriculas));
+    $actualizados = $stmt->rowCount();
+    $omitidos = count($matriculas) - $actualizados;
+
+    echo json_encode(['success' => true, 'actualizados' => $actualizados, 'omitidos' => $omitidos]);
     exit;
 }
 

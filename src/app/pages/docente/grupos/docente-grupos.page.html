@@ -10,7 +10,6 @@
         <tr>
           <th>Grupo</th>
           <th>Semestre</th>
-          <th>Turno</th>
           <th>Materia</th>
           <th>Acción</th>
         </tr>
@@ -19,12 +18,11 @@
         <tr *ngFor="let asignacion of asignacionesFiltradas">
           <td>{{ asignacion.grupo_nombre }}</td>
           <td>{{ asignacion.semestre }}</td>
-          <td>{{ asignacion.turno ?? '-' }}</td>
           <td>{{ asignacion.materia_nombre }}</td>
           <td><ion-button size="small" fill="outline" (click)="verAlumnos(asignacion)">Ver Alumnos</ion-button></td>
         </tr>
         <tr *ngIf="!cargando && !asignacionesFiltradas.length">
-          <td colspan="5" class="empty">No tienes grupos asignados todavía.</td>
+          <td colspan="4" class="empty">No tienes grupos asignados todavía.</td>
         </tr>
       </tbody>
     </table>

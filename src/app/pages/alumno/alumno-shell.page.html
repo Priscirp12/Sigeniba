@@ -1,0 +1,53 @@
+<ion-split-pane contentId="alumno-content">
+  <ion-menu contentId="alumno-content" class="alumno-menu">
+    <ion-header>
+      <ion-toolbar>
+        <ion-title>SIGENIBA</ion-title>
+      </ion-toolbar>
+    </ion-header>
+    <ion-content class="menu-content">
+      <div class="user-block">
+        <ion-icon name="person-circle-outline"></ion-icon>
+        <div class="user-info">
+          <strong>{{ usuario?.nombre }} {{ usuario?.apellidos }}</strong>
+          <span class="rol"><span class="dot"></span>{{ usuario?.rol }}</span>
+        </div>
+      </div>
+
+      <p class="menu-label">Menú Principal</p>
+
+      <ion-list lines="none">
+        <ion-item button="true" (click)="calificacionesAbierto = !calificacionesAbierto">
+          <ion-icon slot="start" name="school-outline"></ion-icon>
+          <ion-label>Calificaciones</ion-label>
+          <ion-icon slot="end" name="chevron-down-outline" [class.rotated]="calificacionesAbierto"></ion-icon>
+        </ion-item>
+        <ion-item *ngIf="calificacionesAbierto" button="true" routerLink="/alumno" routerLinkActive="active-link" [routerLinkActiveOptions]="{ exact: true }" class="sub-item">
+          <ion-icon slot="start" name="list-outline"></ion-icon>
+          <ion-label>• Actuales</ion-label>
+        </ion-item>
+      </ion-list>
+    </ion-content>
+  </ion-menu>
+
+  <div class="ion-page" id="alumno-content">
+    <ion-header>
+      <ion-toolbar class="topbar">
+        <ion-title>SIGENIBA</ion-title>
+        <div slot="end" class="user-chip">
+          <ion-icon name="person-circle-outline"></ion-icon>
+          <div class="chip-info">
+            <strong>{{ usuario?.nombre }} {{ usuario?.apellidos }}</strong>
+            <span>{{ usuario?.rol }}</span>
+          </div>
+          <ion-button fill="clear" (click)="cerrarSesion()">
+            <ion-icon slot="icon-only" name="log-out-outline"></ion-icon>
+          </ion-button>
+        </div>
+      </ion-toolbar>
+    </ion-header>
+    <div class="outlet-wrapper">
+      <ion-router-outlet></ion-router-outlet>
+    </div>
+  </div>
+</ion-split-pane>

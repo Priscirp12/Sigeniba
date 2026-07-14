@@ -32,7 +32,10 @@ if ($method === 'GET') {
         $criterios = obtener_criterios($pdo, $idAsignacion, $tipo);
     }
 
-    echo json_encode($criterios);
+    echo json_encode([
+        'criterios' => $criterios,
+        'tiene_calificaciones' => tiene_calificaciones_capturadas($pdo, $idAsignacion, $tipo),
+    ]);
     exit;
 }
 
@@ -49,6 +52,10 @@ if ($method === 'POST') {
 
     if ((float) $valorPuntos <= 0) {
         send_error('El valor en puntos debe ser mayor a 0');
+    }
+
+    if (tiene_calificaciones_capturadas($pdo, $idAsignacion, $tipo)) {
+        send_error('Ya hay calificaciones capturadas para esta evaluación. Vacíalas primero desde Captura de Calificaciones para poder modificar los criterios.', 409);
     }
 
     $stmt = $pdo->prepare('SELECT COALESCE(SUM(valor_puntos), 0) AS suma FROM criterios_evaluacion WHERE id_asignacion = ? AND tipo = ?');
@@ -88,6 +95,10 @@ if ($method === 'PUT') {
         send_error('Criterio no encontrado', 404);
     }
 
+    if (tiene_calificaciones_capturadas($pdo, $criterio['id_asignacion'], $criterio['tipo'])) {
+        send_error('Ya hay calificaciones capturadas para esta evaluación. Vacíalas primero desde Captura de Calificaciones para poder modificar los criterios.', 409);
+    }
+
     if ($criterio['es_examen'] && (float) $valorPuntos > 5) {
         send_error('El criterio de Examen no puede superar los 5 puntos');
     }
@@ -122,7 +133,7 @@ if ($method === 'DELETE') {
         send_error('id_criterio requerido');
     }
 
-    $stmt = $pdo->prepare('SELECT es_examen FROM criterios_evaluacion WHERE id_criterio = ?');
+    $stmt = $pdo->prepare('SELECT id_asignacion, tipo, es_examen FROM criterios_evaluacion WHERE id_criterio = ?');
     $stmt->execute([$idCriterio]);
     $criterio = $stmt->fetch();
 
@@ -132,6 +143,10 @@ if ($method === 'DELETE') {
 
     if ($criterio['es_examen']) {
         send_error('No se puede eliminar el criterio de Examen');
+    }
+
+    if (tiene_calificaciones_capturadas($pdo, $criterio['id_asignacion'], $criterio['tipo'])) {
+        send_error('Ya hay calificaciones capturadas para esta evaluación. Vacíalas primero desde Captura de Calificaciones para poder modificar los criterios.', 409);
     }
 
     try {

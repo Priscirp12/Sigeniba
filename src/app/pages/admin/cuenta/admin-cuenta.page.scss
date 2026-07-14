@@ -26,3 +26,9 @@ ion-item {
   justify-content: flex-end;
   margin-top: 1rem;
 }
+
+ion-input ion-icon[slot='end'] {
+  cursor: pointer;
+  color: #64748b;
+  font-size: 1.15rem;
+}

@@ -69,13 +69,12 @@ export class AdminGruposPage {
   // Crear grupo
   nombreGrupo = '';
   semestreGrupo: number | null = null;
-  turnoGrupo: 'Matutino' | 'Vespertino' | null = null;
   claveTutorGrupo: string | null = null;
   guardandoGrupo = false;
 
   // Asignar / cambiar alumnos de grupo
   alumnos: AlumnoAdmin[] = [];
-  filtroGeneracion = '';
+  filtroPeriodo: string | null = null;
   filtroSemestre: number | null = null;
   seleccionados = new Set<string>();
   grupoDestino: string | null = null;
@@ -88,6 +87,7 @@ export class AdminGruposPage {
   // Asignar materias a docente
   docenteSeleccionado: string | null = null;
   materiaSeleccionada: string | null = null;
+  filtroMateriaTexto = '';
   grupoParaAsignacion: string | null = null;
   periodoParaAsignacion: string | null = null;
   asignacionesDocente: AsignacionAcademica[] = [];
@@ -121,6 +121,29 @@ export class AdminGruposPage {
     this.periodos = periodos;
   }
 
+  get materiasFiltradasParaAsignar(): MateriaAdmin[] {
+    const texto = this.filtroMateriaTexto.trim().toLowerCase();
+    if (!texto) {
+      return this.materias;
+    }
+    return this.materias.filter((materia) => materia.nombre.toLowerCase().includes(texto));
+  }
+
+  get materiaSeleccionadaNombre(): string | null {
+    return this.materias.find((materia) => materia.id_materia === this.materiaSeleccionada)?.nombre ?? null;
+  }
+
+  seleccionarMateria(idMateria: string): void {
+    this.materiaSeleccionada = idMateria;
+  }
+
+  periodoNombre(idPeriodo: string | null | undefined): string {
+    if (!idPeriodo) {
+      return 'Sin periodo';
+    }
+    return this.periodos.find((p) => p.id_periodo === idPeriodo)?.ciclo_escolar ?? idPeriodo;
+  }
+
   cambiarSegmento(segmento: Segmento): void {
     this.segmento = segmento;
     if (segmento === 'alumnos') {
@@ -140,13 +163,11 @@ export class AdminGruposPage {
       await this.adminService.crearGrupo({
         nombre: this.nombreGrupo,
         semestre: this.semestreGrupo,
-        turno: this.turnoGrupo,
         clave_tutor: this.claveTutorGrupo,
       });
       await this.mostrarToast('Grupo creado correctamente', 'success');
       this.nombreGrupo = '';
       this.semestreGrupo = null;
-      this.turnoGrupo = null;
       this.claveTutorGrupo = null;
       await this.cargarCatalogos();
     } catch (error) {
@@ -159,7 +180,7 @@ export class AdminGruposPage {
   // --- Asignar / cambiar alumnos de grupo ---
   async buscarAlumnos(): Promise<void> {
     this.alumnos = await this.adminService.getAlumnos({
-      generacion: this.filtroGeneracion || undefined,
+      id_periodo: this.filtroPeriodo || undefined,
       semestre: this.filtroSemestre || undefined,
     });
     this.seleccionados.clear();
@@ -181,8 +202,20 @@ export class AdminGruposPage {
 
     this.asignandoAlumnos = true;
     try {
-      await this.adminService.asignarAlumnosAGrupo(this.grupoDestino, Array.from(this.seleccionados));
-      await this.mostrarToast('Alumnos asignados al grupo correctamente', 'success');
+      const resultado = await this.adminService.asignarAlumnosAGrupo(this.grupoDestino, Array.from(this.seleccionados));
+      if (resultado.omitidos > 0 && resultado.actualizados > 0) {
+        await this.mostrarToast(
+          `${resultado.actualizados} alumno(s) asignado(s). ${resultado.omitidos} no se movieron porque su semestre está en curso.`,
+          'danger',
+        );
+      } else if (resultado.omitidos > 0) {
+        await this.mostrarToast(
+          'No se movió ningún alumno: su semestre sigue en curso. Solo se puede cambiar de grupo entre semestres.',
+          'danger',
+        );
+      } else {
+        await this.mostrarToast('Alumnos asignados al grupo correctamente', 'success');
+      }
       await this.buscarAlumnos();
     } catch (error) {
       await this.mostrarToast(error instanceof Error ? error.message : 'Ocurrió un error al asignar', 'danger');

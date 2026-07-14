@@ -111,4 +111,34 @@ if ($method === 'POST') {
     exit;
 }
 
+if ($method === 'DELETE') {
+    $idAsignacion = $_GET['id_asignacion'] ?? null;
+    $tipo = $_GET['tipo'] ?? null;
+
+    if (!$idAsignacion || !in_array($tipo, $tiposValidos, true)) {
+        send_error('id_asignacion y un tipo válido son requeridos');
+    }
+
+    $stmt = $pdo->prepare('SELECT id_periodo FROM asignaciones_academicas WHERE id_asignacion = ?');
+    $stmt->execute([$idAsignacion]);
+    $asignacion = $stmt->fetch();
+
+    if (!$asignacion) {
+        send_error('Asignación no encontrada', 404);
+    }
+
+    $ventana = ventana_captura_estado($pdo, $asignacion['id_periodo'], $tipo);
+    if (!$ventana['abierta']) {
+        send_error('No se puede vaciar: la ventana de captura no está abierta', 403);
+    }
+
+    $stmt = $pdo->prepare('DELETE cc FROM calificaciones_criterios cc
+                            JOIN criterios_evaluacion c ON c.id_criterio = cc.id_criterio
+                            WHERE c.id_asignacion = ? AND c.tipo = ?');
+    $stmt->execute([$idAsignacion, $tipo]);
+
+    echo json_encode(['success' => true, 'eliminadas' => $stmt->rowCount()]);
+    exit;
+}
+
 send_error('Método no permitido', 405);

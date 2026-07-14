@@ -91,3 +91,38 @@ td {
   box-shadow: 0 10px 30px rgba(15, 61, 103, 0.1);
   max-width: 420px;
 }
+
+.modo-segment {
+  margin-bottom: 1.25rem;
+  max-width: 480px;
+}
+
+.sumas-parciales {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+}
+
+.sumas-parciales .suma {
+  margin-bottom: 0;
+}
+
+.suma ion-icon {
+  vertical-align: middle;
+  margin-left: 0.3rem;
+}
+
+.tag.bloqueado {
+  background: #e2e8f0;
+  color: #475569;
+}
+
+.bloqueado-msg {
+  color: #92400e;
+  background: #fef3c7;
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  margin: 0;
+  font-size: 0.9rem;
+}

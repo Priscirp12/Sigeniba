@@ -1,0 +1,89 @@
+.alumno-shell {
+  --background: #f4f7fb;
+}
+
+.breadcrumb {
+  margin: 0 0 0.25rem;
+  color: #64748b;
+  font-size: 0.85rem;
+}
+
+h1 {
+  margin: 0 0 1.25rem;
+  color: #0f3d67;
+  font-size: 1.3rem;
+  font-weight: 800;
+}
+
+.tarjetas {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+ion-card {
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(15, 61, 103, 0.1);
+  margin: 0;
+  position: relative;
+}
+
+ion-card-title {
+  font-size: 1.05rem;
+  color: #0f3d67;
+}
+
+.promedio {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1f6cb5;
+  margin: 0 0 0.25rem;
+}
+
+.docente {
+  color: #64748b;
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+ion-card-content ion-icon {
+  position: absolute;
+  bottom: 0.75rem;
+  right: 0.85rem;
+  font-size: 1.2rem;
+  color: #94a3b8;
+}
+
+.empty {
+  color: #64748b;
+  grid-column: 1 / -1;
+}
+
+.tabla-criterios {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1.25rem;
+}
+
+.tabla-criterios th,
+.tabla-criterios td {
+  text-align: left;
+  padding: 0.5rem 0.6rem;
+  border-bottom: 1px solid var(--ion-color-light-shade);
+}
+
+.fila-total td {
+  font-weight: 700;
+  color: #0f3d67;
+  border-bottom: none;
+}
+
+.sin-datos {
+  color: #64748b;
+}
+
+.calificacion-final {
+  margin-top: 1rem;
+  font-size: 1.1rem;
+  color: #0f3d67;
+}

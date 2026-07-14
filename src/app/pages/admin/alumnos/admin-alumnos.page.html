@@ -87,12 +87,6 @@
           </ion-item>
           <ion-item>
             <ion-label>
-              <p>Generación</p>
-              <h3>{{ alumno.generacion ?? '-' }}</h3>
-            </ion-label>
-          </ion-item>
-          <ion-item>
-            <ion-label>
               <p>Email</p>
               <h3>{{ alumno.email ?? '-' }}</h3>
             </ion-label>
@@ -161,10 +155,6 @@
             <ion-input type="number" [(ngModel)]="form.edad"></ion-input>
           </ion-item>
           <ion-item>
-            <ion-label position="stacked">Generación</ion-label>
-            <ion-input [(ngModel)]="form.generacion"></ion-input>
-          </ion-item>
-          <ion-item>
             <ion-label position="stacked">Email</ion-label>
             <ion-input type="email" [(ngModel)]="form.email"></ion-input>
           </ion-item>
@@ -182,7 +172,7 @@
           </ion-item>
           <ion-item>
             <ion-label position="stacked">{{ modoEdicion ? 'Nueva contraseña (opcional)' : 'Contraseña' }}</ion-label>
-            <ion-input type="password" [(ngModel)]="form.password"></ion-input>
+            <ion-input type="password" autocomplete="new-password" [(ngModel)]="form.password"></ion-input>
           </ion-item>
         </ion-list>
 

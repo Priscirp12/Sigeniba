@@ -72,3 +72,48 @@ h3 {
   color: #0f3d67;
   margin: 1rem 0 0.5rem;
 }
+
+.materia-picker {
+  margin-bottom: 0.6rem;
+}
+
+.materia-picker ion-searchbar {
+  --border-radius: 12px;
+  padding: 0.25rem 0;
+}
+
+.materia-actual {
+  margin: 0 0 0.4rem;
+  font-size: 0.85rem;
+  color: #1f6cb5;
+  font-weight: 600;
+}
+
+.materia-lista {
+  max-height: 220px;
+  overflow-y: auto;
+  border-radius: 14px;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+}
+
+.materia-lista ion-item {
+  --background: transparent;
+  border-radius: 0;
+  margin-bottom: 0;
+}
+
+.materia-lista ion-item.seleccionada {
+  --background: #eef4fb;
+  --color: #1f6cb5;
+  font-weight: 700;
+}
+
+.aviso-semestre {
+  background: #fef3c7;
+  color: #92400e;
+  border-radius: 12px;
+  padding: 0.65rem 1rem;
+  margin: 0 0 1rem;
+  font-size: 0.85rem;
+}

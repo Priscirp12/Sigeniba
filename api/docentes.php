@@ -32,10 +32,10 @@ if ($method === 'POST') {
         send_error('Nombre, apellido paterno, clave de docente, especialidad y contraseña son requeridos');
     }
 
-    $stmt = $pdo->prepare('SELECT id_docente FROM docentes WHERE id_docente = ?');
+    $stmt = $pdo->prepare('SELECT id_usuario FROM usuarios WHERE id_usuario = ?');
     $stmt->execute([$idDocente]);
     if ($stmt->fetch()) {
-        send_error('Ya existe un docente con esa clave');
+        send_error('Ya existe un usuario registrado con esa clave');
     }
 
     $pdo->beginTransaction();
@@ -79,10 +79,10 @@ if ($method === 'PUT') {
     $pdo->beginTransaction();
     try {
         if ($nuevaClave !== $idDocente) {
-            $stmt = $pdo->prepare('SELECT id_docente FROM docentes WHERE id_docente = ?');
+            $stmt = $pdo->prepare('SELECT id_usuario FROM usuarios WHERE id_usuario = ?');
             $stmt->execute([$nuevaClave]);
             if ($stmt->fetch()) {
-                throw new RuntimeException('Ya existe un docente con la nueva clave');
+                throw new RuntimeException('Ya existe un usuario registrado con esa clave');
             }
             $pdo->prepare('UPDATE usuarios SET id_usuario = ? WHERE id_usuario = ?')->execute([$nuevaClave, $idUsuario]);
             $pdo->prepare('UPDATE docentes SET id_docente = ? WHERE id_docente = ?')->execute([$nuevaClave, $idDocente]);

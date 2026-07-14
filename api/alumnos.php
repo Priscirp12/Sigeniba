@@ -5,7 +5,7 @@ require_once __DIR__ . '/helpers.php';
 $method = $_SERVER['REQUEST_METHOD'];
 
 if ($method === 'GET') {
-    $sql = 'SELECT a.matricula, a.id_usuario, a.id_grupo, a.id_periodo, a.generacion, a.email, a.telefono,
+    $sql = 'SELECT a.matricula, a.id_usuario, a.id_grupo, a.id_periodo, a.email, a.telefono,
                    u.nombre, u.apellido_paterno, u.apellido_materno, u.sexo, u.edad,
                    g.nombre AS grupo_nombre, g.semestre
             FROM alumnos a
@@ -14,9 +14,9 @@ if ($method === 'GET') {
             WHERE 1 = 1';
     $params = [];
 
-    if (!empty($_GET['generacion'])) {
-        $sql .= ' AND a.generacion = ?';
-        $params[] = $_GET['generacion'];
+    if (!empty($_GET['id_periodo'])) {
+        $sql .= ' AND a.id_periodo = ?';
+        $params[] = $_GET['id_periodo'];
     }
     if (!empty($_GET['semestre'])) {
         $sql .= ' AND g.semestre = ?';
@@ -48,7 +48,6 @@ if ($method === 'POST') {
     $sexo = $data['sexo'] ?? null;
     $edad = $data['edad'] ?? null;
     $password = $data['password'] ?? '';
-    $generacion = $data['generacion'] ?? null;
     $email = $data['email'] ?? null;
     $telefono = $data['telefono'] ?? null;
     $idPeriodo = $data['id_periodo'] ?? null;
@@ -57,10 +56,10 @@ if ($method === 'POST') {
         send_error('Nombre, apellido paterno, matrícula y contraseña son requeridos');
     }
 
-    $stmt = $pdo->prepare('SELECT matricula FROM alumnos WHERE matricula = ?');
+    $stmt = $pdo->prepare('SELECT id_usuario FROM usuarios WHERE id_usuario = ?');
     $stmt->execute([$matricula]);
     if ($stmt->fetch()) {
-        send_error('Ya existe un alumno con esa matrícula');
+        send_error('Ya existe un usuario registrado con esa matrícula');
     }
 
     $pdo->beginTransaction();
@@ -69,8 +68,8 @@ if ($method === 'POST') {
         $stmt = $pdo->prepare('INSERT INTO usuarios (id_usuario, nombre, apellido_paterno, apellido_materno, edad, sexo, password_hash, rol) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
         $stmt->execute([$matricula, $nombre, $apellidoPaterno, $apellidoMaterno, $edad, $sexo, $hash, 'alumno']);
 
-        $stmt = $pdo->prepare('INSERT INTO alumnos (matricula, id_usuario, id_periodo, generacion, email, telefono) VALUES (?, ?, ?, ?, ?, ?)');
-        $stmt->execute([$matricula, $matricula, $idPeriodo, $generacion, $email, $telefono]);
+        $stmt = $pdo->prepare('INSERT INTO alumnos (matricula, id_usuario, id_periodo, email, telefono) VALUES (?, ?, ?, ?, ?)');
+        $stmt->execute([$matricula, $matricula, $idPeriodo, $email, $telefono]);
 
         $pdo->commit();
     } catch (Throwable $e) {
@@ -104,10 +103,10 @@ if ($method === 'PUT') {
     $pdo->beginTransaction();
     try {
         if ($nuevaMatricula !== $matricula) {
-            $stmt = $pdo->prepare('SELECT matricula FROM alumnos WHERE matricula = ?');
+            $stmt = $pdo->prepare('SELECT id_usuario FROM usuarios WHERE id_usuario = ?');
             $stmt->execute([$nuevaMatricula]);
             if ($stmt->fetch()) {
-                throw new RuntimeException('Ya existe un alumno con la nueva matrícula');
+                throw new RuntimeException('Ya existe un usuario registrado con esa matrícula');
             }
             $pdo->prepare('UPDATE usuarios SET id_usuario = ? WHERE id_usuario = ?')->execute([$nuevaMatricula, $idUsuario]);
             $pdo->prepare('UPDATE alumnos SET matricula = ? WHERE matricula = ?')->execute([$nuevaMatricula, $matricula]);
@@ -133,7 +132,7 @@ if ($method === 'PUT') {
 
         $alumnoSets = [];
         $alumnoParams = [];
-        foreach (['generacion', 'email', 'telefono', 'id_periodo'] as $field) {
+        foreach (['email', 'telefono', 'id_periodo'] as $field) {
             if (array_key_exists($field, $data)) {
                 $alumnoSets[] = "$field = ?";
                 $alumnoParams[] = $data[$field];

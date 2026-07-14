@@ -12,7 +12,6 @@ import {
   IonLabel,
   IonList,
   IonModal,
-  IonNote,
   IonSearchbar,
   IonSelect,
   IonSelectOption,
@@ -22,7 +21,7 @@ import {
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { addOutline, createOutline } from 'ionicons/icons';
-import { AdminService, MateriaAdmin, PeriodoEscolar } from '../../../services/admin.service';
+import { AdminService, MateriaAdmin } from '../../../services/admin.service';
 
 @Component({
   selector: 'app-admin-materias',
@@ -43,7 +42,6 @@ import { AdminService, MateriaAdmin, PeriodoEscolar } from '../../../services/ad
     IonItem,
     IonLabel,
     IonInput,
-    IonNote,
     IonSearchbar,
     IonSelect,
     IonSelectOption,
@@ -51,7 +49,6 @@ import { AdminService, MateriaAdmin, PeriodoEscolar } from '../../../services/ad
 })
 export class AdminMateriasPage {
   materias: MateriaAdmin[] = [];
-  periodos: PeriodoEscolar[] = [];
   cargando = false;
   guardando = false;
   filtroTexto = '';
@@ -61,7 +58,7 @@ export class AdminMateriasPage {
   nombre = '';
   clave = '';
   horasSemana: number | null = null;
-  idPeriodo: string | null = null;
+  semestre: number | null = null;
 
   constructor(
     private readonly adminService: AdminService,
@@ -82,9 +79,7 @@ export class AdminMateriasPage {
   async cargarDatos(): Promise<void> {
     this.cargando = true;
     try {
-      const [materias, periodos] = await Promise.all([this.adminService.getMaterias(), this.adminService.getPeriodos()]);
-      this.materias = materias;
-      this.periodos = periodos;
+      this.materias = await this.adminService.getMaterias();
     } finally {
       this.cargando = false;
     }
@@ -96,7 +91,7 @@ export class AdminMateriasPage {
     this.nombre = '';
     this.clave = '';
     this.horasSemana = null;
-    this.idPeriodo = null;
+    this.semestre = null;
     this.modalAbierto = true;
   }
 
@@ -106,7 +101,7 @@ export class AdminMateriasPage {
     this.nombre = materia.nombre;
     this.clave = materia.clave ?? '';
     this.horasSemana = materia.horas_semana;
-    this.idPeriodo = materia.id_periodo;
+    this.semestre = materia.semestre;
     this.modalAbierto = true;
   }
 
@@ -128,6 +123,7 @@ export class AdminMateriasPage {
           nombre: this.nombre,
           clave: this.clave,
           horas_semana: this.horasSemana,
+          semestre: this.semestre,
         });
         await this.mostrarToast('Materia actualizada correctamente', 'success');
       } else {
@@ -135,7 +131,7 @@ export class AdminMateriasPage {
           nombre: this.nombre,
           clave: this.clave,
           horas_semana: this.horasSemana,
-          id_periodo: this.idPeriodo,
+          semestre: this.semestre,
         });
         await this.mostrarToast('Materia registrada correctamente', 'success');
       }
