@@ -18,6 +18,7 @@ export class AdminCuentaPage {
   usuarioActual = this.authService.user?.id_usuario ?? '';
   passwordActual = '';
   nuevoUsuario = '';
+  email = '';
   nuevaPassword = '';
   confirmarPassword = '';
   guardando = false;
@@ -39,8 +40,8 @@ export class AdminCuentaPage {
       await this.mostrarToast('Ingresa tu contraseña actual', 'danger');
       return;
     }
-    if (!this.nuevoUsuario && !this.nuevaPassword) {
-      await this.mostrarToast('Indica un nuevo usuario o una nueva contraseña', 'danger');
+    if (!this.nuevoUsuario && !this.nuevaPassword && !this.email) {
+      await this.mostrarToast('Indica un nuevo usuario, una nueva contraseña o un correo', 'danger');
       return;
     }
     if (this.nuevaPassword && this.nuevaPassword !== this.confirmarPassword) {
@@ -55,6 +56,7 @@ export class AdminCuentaPage {
         password_actual: this.passwordActual,
         ...(this.nuevoUsuario ? { nuevo_id_usuario: this.nuevoUsuario } : {}),
         ...(this.nuevaPassword ? { nueva_password: this.nuevaPassword } : {}),
+        ...(this.email ? { email: this.email } : {}),
       });
       await this.mostrarToast('Cuenta actualizada. Vuelve a iniciar sesión.', 'success');
       this.authService.logout();

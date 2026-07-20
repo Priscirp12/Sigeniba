@@ -9,13 +9,14 @@ $idUsuarioActual = trim($data['id_usuario_actual'] ?? '');
 $passwordActual = $data['password_actual'] ?? '';
 $nuevoIdUsuario = trim($data['nuevo_id_usuario'] ?? '');
 $nuevaPassword = $data['nueva_password'] ?? '';
+$nuevoEmail = trim($data['email'] ?? '');
 
 if (!$idUsuarioActual || !$passwordActual) {
     send_error('Usuario y contraseña actuales son requeridos');
 }
 
-if (!$nuevoIdUsuario && !$nuevaPassword) {
-    send_error('Debes indicar un nuevo usuario o una nueva contraseña');
+if (!$nuevoIdUsuario && !$nuevaPassword && !$nuevoEmail) {
+    send_error('Debes indicar un nuevo usuario, una nueva contraseña o un correo');
 }
 
 $stmt = $pdo->prepare('SELECT id_usuario, password_hash FROM usuarios WHERE id_usuario = ? LIMIT 1');
@@ -43,6 +44,15 @@ try {
     if ($nuevaPassword) {
         $hash = password_hash($nuevaPassword, PASSWORD_DEFAULT);
         $pdo->prepare('UPDATE usuarios SET password_hash = ? WHERE id_usuario = ?')->execute([$hash, $idUsuarioFinal]);
+    }
+
+    if ($nuevoEmail) {
+        $stmt = $pdo->prepare('SELECT id_usuario FROM usuarios WHERE email = ? AND id_usuario != ?');
+        $stmt->execute([$nuevoEmail, $idUsuarioFinal]);
+        if ($stmt->fetch()) {
+            throw new RuntimeException('Ese correo ya está en uso');
+        }
+        $pdo->prepare('UPDATE usuarios SET email = ? WHERE id_usuario = ?')->execute([$nuevoEmail, $idUsuarioFinal]);
     }
 
     $pdo->commit();

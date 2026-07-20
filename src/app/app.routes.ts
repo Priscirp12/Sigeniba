@@ -7,6 +7,14 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/login/login.page').then((m) => m.LoginPage),
   },
   {
+    path: 'recuperar-password',
+    loadComponent: () => import('./pages/recuperar-password/recuperar-password.page').then((m) => m.RecuperarPasswordPage),
+  },
+  {
+    path: 'restablecer-password',
+    loadComponent: () => import('./pages/restablecer-password/restablecer-password.page').then((m) => m.RestablecerPasswordPage),
+  },
+  {
     path: 'home',
     loadComponent: () => import('./home/home.page').then((m) => m.HomePage),
     canActivate: [authGuard],

@@ -17,6 +17,10 @@
       <ion-input autocomplete="off" [(ngModel)]="nuevoUsuario"></ion-input>
     </ion-item>
     <ion-item>
+      <ion-label position="stacked">Correo de recuperación (opcional)</ion-label>
+      <ion-input type="email" autocomplete="email" placeholder="correo@dominio.com" [(ngModel)]="email"></ion-input>
+    </ion-item>
+    <ion-item>
       <ion-label position="stacked">Nueva contraseña (opcional)</ion-label>
       <ion-input [type]="mostrarNuevaPassword ? 'text' : 'password'" autocomplete="new-password" [(ngModel)]="nuevaPassword">
         <ion-icon
