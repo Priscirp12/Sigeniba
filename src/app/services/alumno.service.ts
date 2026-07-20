@@ -24,6 +24,25 @@ export interface MateriaCalificacionesAlumno {
   promedio: number | null;
 }
 
+export interface MateriaHistorial {
+  nombre: string;
+  calificacion: number;
+}
+
+export interface SemestreHistorial {
+  id_periodo: string;
+  etiqueta: string;
+  materias: MateriaHistorial[];
+  promedio_semestre: number;
+}
+
+export interface HistorialAcademico {
+  alumno: { matricula: string; nombre: string };
+  semestres: SemestreHistorial[];
+  promedio_general: number | null;
+  legenda: string;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -32,5 +51,9 @@ export class AlumnoService {
 
   async getMisCalificaciones(matricula: string): Promise<MateriaCalificacionesAlumno[]> {
     return this.api.get<MateriaCalificacionesAlumno[]>(`mis_calificaciones.php?matricula=${matricula}`);
+  }
+
+  async getHistorial(matricula: string): Promise<HistorialAcademico> {
+    return this.api.get<HistorialAcademico>(`historial_academico.php?matricula=${matricula}`);
   }
 }

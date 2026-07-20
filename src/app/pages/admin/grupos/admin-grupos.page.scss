@@ -73,8 +73,21 @@ h3 {
   margin: 1rem 0 0.5rem;
 }
 
+.filtros-asignacion {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
 .materia-picker {
   margin-bottom: 0.6rem;
+}
+
+.materia-nota {
+  margin: 0 0 0.5rem;
+  font-size: 0.8rem;
+  color: #64748b;
 }
 
 .materia-picker ion-searchbar {

@@ -1,0 +1,24 @@
+<ion-content class="ion-padding admin-shell">
+  <div class="page-header">
+    <h1>Historial Académico</h1>
+  </div>
+
+  <p class="ayuda">
+    Este texto se usa como leyenda del Historial Académico que ven y descargan los alumnos. Puedes escribirlo
+    como quieras (varios párrafos, encabezados, etc.) y usar estos comodines, que se sustituyen automáticamente:
+    <code>{{ '{NOMBRE}' }}</code>, <code>{{ '{MATRICULA}' }}</code>, <code>{{ '{PROMEDIO}' }}</code> y
+    <code>{{ '{FECHA_EMISION}' }}</code>.
+  </p>
+
+  <ion-item>
+    <ion-label position="stacked">Plantilla de la leyenda</ion-label>
+    <ion-textarea [(ngModel)]="plantilla" [autoGrow]="true" rows="10" [disabled]="cargando"></ion-textarea>
+  </ion-item>
+
+  <div class="actions">
+    <ion-button [disabled]="guardando || cargando" (click)="guardar()">Guardar cambios</ion-button>
+  </div>
+
+  <h3>Vista previa (con datos de ejemplo)</h3>
+  <div class="vista-previa">{{ vistaPrevia }}</div>
+</ion-content>

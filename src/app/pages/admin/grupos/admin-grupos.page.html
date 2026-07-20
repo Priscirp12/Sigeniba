@@ -65,8 +65,9 @@
   <!-- Asignar / cambiar alumnos de grupo -->
   <div *ngIf="segmento === 'alumnos'">
     <p class="aviso-semestre">
-      Solo se puede cambiar de grupo a un alumno cuando su periodo escolar no está en curso (es decir, entre
-      semestres). Si el periodo del alumno sigue activo, el cambio se omitirá automáticamente.
+      Solo se puede cambiar de grupo a un alumno cuando no tiene ninguna fecha de captura activa hoy (parcial,
+      extraordinario o intersemestral), es decir, cuando el semestre no está en curso. Si tiene una ventana de
+      captura abierta, el cambio se omitirá automáticamente.
     </p>
 
     <div class="filtros">
@@ -172,6 +173,29 @@
     </ion-item>
 
     <ng-container *ngIf="docenteSeleccionado">
+      <div class="filtros-asignacion">
+        <ion-item>
+          <ion-label position="stacked">Semestre</ion-label>
+          <ion-select [(ngModel)]="filtroSemestreAsignacion" (ionChange)="onCambioSemestreAsignacion()">
+            <ion-select-option [value]="null">Todos</ion-select-option>
+            <ion-select-option *ngFor="let s of [1, 2, 3, 4, 5, 6]" [value]="s">Semestre {{ s }}</ion-select-option>
+          </ion-select>
+        </ion-item>
+        <ion-item>
+          <ion-label position="stacked">Grupo</ion-label>
+          <ion-select [(ngModel)]="grupoParaAsignacion" (ionChange)="onCambioGrupoAsignacion()">
+            <ion-select-option *ngFor="let grupo of gruposFiltradosPorSemestre" [value]="grupo.id_grupo">{{ grupo.nombre }}</ion-select-option>
+          </ion-select>
+        </ion-item>
+        <ion-item>
+          <ion-label position="stacked">Periodo</ion-label>
+          <ion-select [(ngModel)]="periodoParaAsignacion" interface="popover">
+            <ion-select-option *ngFor="let periodo of periodos" [value]="periodo.id_periodo">{{ periodo.ciclo_escolar }}</ion-select-option>
+          </ion-select>
+          <ion-note *ngIf="!periodos.length">Aún no hay periodos escolares. Crea uno en "Fechas de captura".</ion-note>
+        </ion-item>
+      </div>
+
       <div class="materia-picker">
         <ion-label position="stacked">Materia</ion-label>
         <ion-searchbar
@@ -180,6 +204,7 @@
           showClearButton="always"
         ></ion-searchbar>
         <p class="materia-actual" *ngIf="materiaSeleccionadaNombre">Seleccionada: {{ materiaSeleccionadaNombre }}</p>
+        <p class="materia-nota" *ngIf="!filtroSemestreAsignacion">Elige un semestre o un grupo para ver solo las materias que se pueden asignar.</p>
         <div class="materia-lista">
           <ion-item
             *ngFor="let materia of materiasFiltradasParaAsignar"
@@ -194,19 +219,7 @@
           </ion-item>
         </div>
       </div>
-      <ion-item>
-        <ion-label position="stacked">Grupo</ion-label>
-        <ion-select [(ngModel)]="grupoParaAsignacion">
-          <ion-select-option *ngFor="let grupo of grupos" [value]="grupo.id_grupo">{{ grupo.nombre }}</ion-select-option>
-        </ion-select>
-      </ion-item>
-      <ion-item>
-        <ion-label position="stacked">Periodo</ion-label>
-        <ion-select [(ngModel)]="periodoParaAsignacion" interface="popover">
-          <ion-select-option *ngFor="let periodo of periodos" [value]="periodo.id_periodo">{{ periodo.ciclo_escolar }}</ion-select-option>
-        </ion-select>
-        <ion-note *ngIf="!periodos.length">Aún no hay periodos escolares. Crea uno en "Fechas de captura".</ion-note>
-      </ion-item>
+
       <div class="actions">
         <ion-button [disabled]="asignandoMateria" (click)="agregarMateriaADocente()">Agregar materia al docente</ion-button>
       </div>

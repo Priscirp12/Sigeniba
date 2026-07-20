@@ -1,0 +1,98 @@
+.alumno-shell {
+  --background: #f4f7fb;
+}
+
+.breadcrumb {
+  margin: 0 0 0.25rem;
+  color: #64748b;
+  font-size: 0.85rem;
+}
+
+.acciones-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.acciones-header h1 {
+  margin: 0;
+  color: #0f3d67;
+  font-size: 1.3rem;
+  font-weight: 800;
+}
+
+.documento {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(15, 61, 103, 0.1);
+  padding: 2rem;
+  max-width: 760px;
+}
+
+.documento h2 {
+  text-align: center;
+  color: #0f3d67;
+  margin: 1.5rem 0 1rem;
+}
+
+.introduccion {
+  text-align: center;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #1e293b;
+  line-height: 1.5;
+  margin: 0;
+  white-space: pre-line;
+}
+
+h3 {
+  color: #0f3d67;
+  margin: 1.5rem 0 0.5rem;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 0.5rem;
+}
+
+th,
+td {
+  text-align: left;
+  padding: 0.4rem 0.3rem;
+}
+
+th {
+  border-bottom: 1px solid #334155;
+  font-size: 0.85rem;
+}
+
+td {
+  border-bottom: 1px solid #e2e8f0;
+  font-size: 0.9rem;
+}
+
+.col-calificacion {
+  text-align: right;
+  width: 120px;
+}
+
+.fila-promedio td {
+  font-weight: 700;
+  border-top: 2px solid #334155;
+  border-bottom: none;
+}
+
+.promedio-general {
+  margin-top: 2rem;
+  font-size: 1.3rem;
+}
+
+.sin-datos {
+  text-align: center;
+  color: #64748b;
+  margin: 2rem 0;
+}

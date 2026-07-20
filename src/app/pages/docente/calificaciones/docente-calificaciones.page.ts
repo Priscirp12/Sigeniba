@@ -1,59 +1,41 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import {
   AlertController,
   IonButton,
-  IonButtons,
   IonContent,
-  IonHeader,
   IonIcon,
   IonInput,
   IonItem,
   IonLabel,
-  IonModal,
   IonSearchbar,
   IonSegment,
   IonSegmentButton,
   IonSelect,
   IonSelectOption,
-  IonTitle,
-  IonToolbar,
   ToastController,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { trashOutline } from 'ionicons/icons';
 import { AuthService } from '../../../services/auth.service';
-import { AsignacionDocente, CalificacionesResponse, DocenteService, FilaCalificacionAlumno } from '../../../services/docente.service';
+import {
+  AsignacionDocente,
+  CalificacionesResponse,
+  DocenteService,
+  FilaCalificacionAlumno,
+  TipoEvaluacion,
+} from '../../../services/docente.service';
 
-type TipoParcial = 'parcial1' | 'parcial2' | 'parcial3';
-type TipoEspecial = 'extraordinario' | 'intersemestral';
-type Modo = 'regulares' | 'especiales';
 type FiltroEstado = 'todos' | 'aprobados' | 'reprobados' | 'capturada' | 'no_capturada';
 
-interface DatosParcial {
-  tipo: TipoParcial;
-  etiqueta: string;
-  respuesta: CalificacionesResponse | null;
-}
-
-interface AlumnoCombinado {
-  matricula: string;
-  nombreCompleto: string;
-  sumas: number[];
-  promedio: number | null;
-}
-
-const PARCIALES: { tipo: TipoParcial; etiqueta: string }[] = [
-  { tipo: 'parcial1', etiqueta: 'Parcial 1' },
-  { tipo: 'parcial2', etiqueta: 'Parcial 2' },
-  { tipo: 'parcial3', etiqueta: 'Parcial 3' },
-];
-
-const ESPECIALES: { tipo: TipoEspecial; etiqueta: string }[] = [
-  { tipo: 'extraordinario', etiqueta: 'Extraordinario' },
-  { tipo: 'intersemestral', etiqueta: 'Intersemestral' },
+const TIPOS: { valor: TipoEvaluacion; etiqueta: string }[] = [
+  { valor: 'parcial1', etiqueta: 'Parcial 1' },
+  { valor: 'parcial2', etiqueta: 'Parcial 2' },
+  { valor: 'parcial3', etiqueta: 'Parcial 3' },
+  { valor: 'extraordinario', etiqueta: 'Extraordinario' },
+  { valor: 'intersemestral', etiqueta: 'Intersemestral' },
 ];
 
 const CALIFICACION_APROBATORIA = 6;
@@ -65,42 +47,32 @@ const CALIFICACION_APROBATORIA = 6;
   imports: [
     CommonModule,
     FormsModule,
+    RouterLink,
     IonContent,
     IonButton,
-    IonButtons,
-    IonHeader,
     IonIcon,
     IonInput,
     IonItem,
     IonLabel,
-    IonModal,
     IonSearchbar,
     IonSegment,
     IonSegmentButton,
     IonSelect,
     IonSelectOption,
-    IonTitle,
-    IonToolbar,
   ],
 })
 export class DocenteCalificacionesPage {
+  tipos = TIPOS;
   asignaciones: AsignacionDocente[] = [];
   idAsignacionSeleccionada: string | null = null;
+  tipoSeleccionado: TipoEvaluacion = 'parcial1';
+  idCriterioSeleccionado: string | null = null;
 
-  modo: Modo = 'regulares';
+  respuesta: CalificacionesResponse | null = null;
   cargando = false;
-  matriculaSeleccionada: string | null = null;
 
   filtroTexto = '';
   filtroEstado: FiltroEstado = 'todos';
-
-  // Parciales regulares (los tres juntos)
-  parciales: DatosParcial[] = PARCIALES.map((p) => ({ ...p, respuesta: null }));
-
-  // Extraordinario / Intersemestral
-  especiales = ESPECIALES;
-  tipoEspecial: TipoEspecial = 'extraordinario';
-  respuestaEspecial: CalificacionesResponse | null = null;
 
   constructor(
     private readonly docenteService: DocenteService,
@@ -128,179 +100,33 @@ export class DocenteCalificacionesPage {
     }
 
     if (this.idAsignacionSeleccionada) {
-      await this.cargarTodo();
+      await this.cargarCalificaciones();
     }
   }
 
-  async onCambioAsignacion(): Promise<void> {
-    this.matriculaSeleccionada = null;
-    await this.cargarTodo();
+  async onCambio(): Promise<void> {
+    this.idCriterioSeleccionado = null;
+    await this.cargarCalificaciones();
   }
 
-  async cambiarModo(modo: Modo): Promise<void> {
-    this.modo = modo;
-    this.matriculaSeleccionada = null;
-    await this.cargarTodo();
-  }
-
-  private async cargarTodo(): Promise<void> {
-    if (this.modo === 'regulares') {
-      await this.cargarRegulares();
-    } else {
-      await this.cargarEspecial();
-    }
-  }
-
-  // --- Parciales regulares ---
-  async cargarRegulares(): Promise<void> {
+  async cargarCalificaciones(): Promise<void> {
     if (!this.idAsignacionSeleccionada) {
       return;
     }
     this.cargando = true;
     try {
-      await Promise.all(this.parciales.map((parcial) => this.cargarParcial(parcial)));
+      this.respuesta = await this.docenteService.getCalificaciones(this.idAsignacionSeleccionada, this.tipoSeleccionado);
+      const sigueExistiendo = this.respuesta.criterios.some((c) => c.id_criterio === this.idCriterioSeleccionado);
+      if (!sigueExistiendo) {
+        this.idCriterioSeleccionado = this.respuesta.criterios[0]?.id_criterio ?? null;
+      }
     } finally {
       this.cargando = false;
     }
   }
 
-  private async cargarParcial(parcial: DatosParcial): Promise<void> {
-    if (!this.idAsignacionSeleccionada) {
-      return;
-    }
-    parcial.respuesta = await this.docenteService.getCalificaciones(this.idAsignacionSeleccionada, parcial.tipo);
-  }
-
-  get alumnosCombinados(): AlumnoCombinado[] {
-    const base = this.parciales.find((p) => p.respuesta)?.respuesta?.alumnos ?? [];
-    return base.map((fila) => {
-      const sumas: number[] = [];
-      for (const parcial of this.parciales) {
-        const otraFila = parcial.respuesta?.alumnos.find((f) => f.alumno.matricula === fila.alumno.matricula);
-        if (otraFila && otraFila.suma > 0) {
-          sumas.push(otraFila.suma);
-        }
-      }
-      const promedio = sumas.length ? Math.round((sumas.reduce((a, b) => a + b, 0) / sumas.length) * 100) / 100 : null;
-      return {
-        matricula: fila.alumno.matricula,
-        nombreCompleto: `${fila.alumno.nombre} ${fila.alumno.apellido_paterno} ${fila.alumno.apellido_materno ?? ''}`.trim(),
-        sumas,
-        promedio,
-      };
-    });
-  }
-
-  tieneCapturaCombinado(alumno: AlumnoCombinado): boolean {
-    return alumno.sumas.length > 0;
-  }
-
-  estaAprobadoCombinado(alumno: AlumnoCombinado): boolean {
-    return this.tieneCapturaCombinado(alumno) && (alumno.promedio ?? 0) >= CALIFICACION_APROBATORIA;
-  }
-
-  estaReprobadoCombinado(alumno: AlumnoCombinado): boolean {
-    return this.tieneCapturaCombinado(alumno) && (alumno.promedio ?? 0) < CALIFICACION_APROBATORIA;
-  }
-
-  get alumnosFiltrados(): AlumnoCombinado[] {
-    const texto = this.filtroTexto.trim().toLowerCase();
-    return this.alumnosCombinados.filter((alumno) => {
-      const coincideTexto = !texto || alumno.nombreCompleto.toLowerCase().includes(texto);
-      if (!coincideTexto) {
-        return false;
-      }
-      switch (this.filtroEstado) {
-        case 'aprobados':
-          return this.estaAprobadoCombinado(alumno);
-        case 'reprobados':
-          return this.estaReprobadoCombinado(alumno);
-        case 'capturada':
-          return this.tieneCapturaCombinado(alumno);
-        case 'no_capturada':
-          return !this.tieneCapturaCombinado(alumno);
-        default:
-          return true;
-      }
-    });
-  }
-
-  filaDelParcial(parcial: DatosParcial, matricula: string): FilaCalificacionAlumno | null {
-    return parcial.respuesta?.alumnos.find((f) => f.alumno.matricula === matricula) ?? null;
-  }
-
-  async guardarValorRegular(
-    tipo: TipoParcial,
-    matricula: string,
-    idCriterio: string,
-    valorCrudo: string | number | null,
-    maxPuntos: number,
-  ): Promise<void> {
-    const parcial = this.parciales.find((p) => p.tipo === tipo);
-    if (!parcial) {
-      return;
-    }
-    const valor = this.parsearValor(valorCrudo);
-    if (valor === undefined) {
-      return;
-    }
-    if (valor < 0 || valor > maxPuntos) {
-      await this.mostrarToast(`El valor no puede exceder ${maxPuntos} puntos`, 'danger');
-      await this.cargarParcial(parcial);
-      return;
-    }
-    try {
-      await this.docenteService.guardarCalificacion(matricula, idCriterio, valor);
-      await this.cargarParcial(parcial);
-    } catch (error) {
-      await this.mostrarToast(error instanceof Error ? error.message : 'Ocurrió un error al guardar', 'danger');
-      await this.cargarParcial(parcial);
-    }
-  }
-
-  async vaciarParcial(parcial: DatosParcial): Promise<void> {
-    if (!this.idAsignacionSeleccionada || !parcial.respuesta?.ventana.abierta) {
-      return;
-    }
-    const alert = await this.alertController.create({
-      header: 'Vaciar calificaciones',
-      message: `¿Seguro que quieres vaciar todas las calificaciones capturadas de ${parcial.etiqueta} para este grupo? Esta acción no se puede deshacer.`,
-      buttons: [
-        { text: 'Cancelar', role: 'cancel' },
-        {
-          text: 'Vaciar',
-          role: 'destructive',
-          handler: () => this.ejecutarVaciarParcial(parcial),
-        },
-      ],
-    });
-    await alert.present();
-  }
-
-  private async ejecutarVaciarParcial(parcial: DatosParcial): Promise<void> {
-    if (!this.idAsignacionSeleccionada) {
-      return;
-    }
-    try {
-      await this.docenteService.vaciarCalificaciones(this.idAsignacionSeleccionada, parcial.tipo);
-      await this.cargarParcial(parcial);
-      await this.mostrarToast('Calificaciones vaciadas correctamente', 'success');
-    } catch (error) {
-      await this.mostrarToast(error instanceof Error ? error.message : 'Ocurrió un error al vaciar', 'danger');
-    }
-  }
-
-  // --- Extraordinario / Intersemestral ---
-  async cargarEspecial(): Promise<void> {
-    if (!this.idAsignacionSeleccionada) {
-      return;
-    }
-    this.cargando = true;
-    try {
-      this.respuestaEspecial = await this.docenteService.getCalificaciones(this.idAsignacionSeleccionada, this.tipoEspecial);
-    } finally {
-      this.cargando = false;
-    }
+  get actividadSeleccionada() {
+    return this.respuesta?.criterios.find((c) => c.id_criterio === this.idCriterioSeleccionado) ?? null;
   }
 
   tieneCaptura(fila: FilaCalificacionAlumno): boolean {
@@ -315,8 +141,8 @@ export class DocenteCalificacionesPage {
     return this.tieneCaptura(fila) && fila.suma < CALIFICACION_APROBATORIA;
   }
 
-  get alumnosFiltradosEspecial(): FilaCalificacionAlumno[] {
-    const alumnos = this.respuestaEspecial?.alumnos ?? [];
+  get alumnosFiltrados(): FilaCalificacionAlumno[] {
+    const alumnos = this.respuesta?.alumnos ?? [];
     const texto = this.filtroTexto.trim().toLowerCase();
 
     return alumnos.filter((fila) => {
@@ -343,30 +169,38 @@ export class DocenteCalificacionesPage {
     });
   }
 
-  async guardarValorEspecial(matricula: string, idCriterio: string, valorCrudo: string | number | null, maxPuntos: number): Promise<void> {
-    const valor = this.parsearValor(valorCrudo);
-    if (valor === undefined) {
+  async guardarValor(matricula: string, valorCrudo: string | number | null): Promise<void> {
+    const actividad = this.actividadSeleccionada;
+    if (!actividad) {
       return;
     }
-    if (valor < 0 || valor > maxPuntos) {
-      await this.mostrarToast(`El valor no puede exceder ${maxPuntos} puntos`, 'danger');
-      await this.cargarEspecial();
+    if (valorCrudo === null || valorCrudo === '') {
       return;
     }
+    const valor = Number(valorCrudo);
+    if (Number.isNaN(valor)) {
+      return;
+    }
+    if (valor < 0 || valor > actividad.valor_puntos) {
+      await this.mostrarToast(`El valor no puede exceder ${actividad.valor_puntos} puntos`, 'danger');
+      await this.cargarCalificaciones();
+      return;
+    }
+
     try {
-      await this.docenteService.guardarCalificacion(matricula, idCriterio, valor);
-      await this.cargarEspecial();
+      await this.docenteService.guardarCalificacion(matricula, actividad.id_criterio, valor);
+      await this.cargarCalificaciones();
     } catch (error) {
       await this.mostrarToast(error instanceof Error ? error.message : 'Ocurrió un error al guardar', 'danger');
-      await this.cargarEspecial();
+      await this.cargarCalificaciones();
     }
   }
 
-  async vaciarEspecial(): Promise<void> {
-    if (!this.idAsignacionSeleccionada || !this.respuestaEspecial?.ventana.abierta) {
+  async vaciar(): Promise<void> {
+    if (!this.idAsignacionSeleccionada || !this.respuesta?.ventana.abierta) {
       return;
     }
-    const etiqueta = this.especiales.find((e) => e.tipo === this.tipoEspecial)?.etiqueta ?? this.tipoEspecial;
+    const etiqueta = this.tipos.find((t) => t.valor === this.tipoSeleccionado)?.etiqueta ?? this.tipoSeleccionado;
     const alert = await this.alertController.create({
       header: 'Vaciar calificaciones',
       message: `¿Seguro que quieres vaciar todas las calificaciones capturadas de ${etiqueta} para este grupo? Esta acción no se puede deshacer.`,
@@ -377,8 +211,8 @@ export class DocenteCalificacionesPage {
           role: 'destructive',
           handler: async () => {
             try {
-              await this.docenteService.vaciarCalificaciones(this.idAsignacionSeleccionada as string, this.tipoEspecial);
-              await this.cargarEspecial();
+              await this.docenteService.vaciarCalificaciones(this.idAsignacionSeleccionada as string, this.tipoSeleccionado);
+              await this.cargarCalificaciones();
               await this.mostrarToast('Calificaciones vaciadas correctamente', 'success');
             } catch (error) {
               await this.mostrarToast(error instanceof Error ? error.message : 'Ocurrió un error al vaciar', 'danger');
@@ -388,34 +222,6 @@ export class DocenteCalificacionesPage {
       ],
     });
     await alert.present();
-  }
-
-  // --- Modal por alumno ---
-  seleccionarAlumno(matricula: string): void {
-    this.matriculaSeleccionada = matricula;
-  }
-
-  cerrarAlumno(): void {
-    this.matriculaSeleccionada = null;
-  }
-
-  get nombreAlumnoSeleccionado(): string {
-    if (!this.matriculaSeleccionada) {
-      return '';
-    }
-    if (this.modo === 'regulares') {
-      return this.alumnosCombinados.find((a) => a.matricula === this.matriculaSeleccionada)?.nombreCompleto ?? '';
-    }
-    const fila = this.respuestaEspecial?.alumnos.find((f) => f.alumno.matricula === this.matriculaSeleccionada);
-    return fila ? `${fila.alumno.nombre} ${fila.alumno.apellido_paterno}` : '';
-  }
-
-  private parsearValor(valorCrudo: string | number | null): number | undefined {
-    if (valorCrudo === null || valorCrudo === '') {
-      return undefined;
-    }
-    const valor = Number(valorCrudo);
-    return Number.isNaN(valor) ? undefined : valor;
   }
 
   private async mostrarToast(message: string, color: 'success' | 'danger'): Promise<void> {

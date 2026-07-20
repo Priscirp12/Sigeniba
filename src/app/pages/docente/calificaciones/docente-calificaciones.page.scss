@@ -130,38 +130,6 @@ td ion-input {
   color: #475569;
 }
 
-.tabla-criterios {
-  width: 100%;
-}
-
-.tabla-criterios td ion-input {
-  width: 90px;
-}
-
-.fila-total td {
-  font-weight: 700;
-  color: #0f3d67;
-  border-bottom: none;
-}
-
-.actions {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 1.25rem;
-}
-
-.modo-segment {
-  margin-bottom: 1.25rem;
-  max-width: 480px;
-}
-
-.ventanas-parciales {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  margin-bottom: 1rem;
-}
-
 .ventana-chip {
   display: flex;
   align-items: center;
@@ -170,6 +138,8 @@ td ion-input {
   border-radius: 999px;
   padding: 0.3rem 0.5rem 0.3rem 1rem;
   box-shadow: 0 4px 14px rgba(15, 61, 103, 0.08);
+  margin-bottom: 1rem;
+  width: fit-content;
 }
 
 .ventana-chip .etiqueta {
@@ -192,23 +162,4 @@ td ion-input {
 .ventana-chip .estado.cerrada {
   background: #fee2e2;
   color: #b91c1c;
-}
-
-.tabla-criterios .aviso,
-p.aviso {
-  color: #92400e;
-  background: #fef3c7;
-  border-radius: 12px;
-  padding: 0.6rem 0.9rem;
-  margin: 0 0 0.75rem;
-  font-size: 0.85rem;
-}
-
-h3 {
-  color: #0f3d67;
-  margin: 1.25rem 0 0.5rem;
-}
-
-h3:first-child {
-  margin-top: 0;
 }

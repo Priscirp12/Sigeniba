@@ -26,6 +26,16 @@
           <ion-icon slot="start" name="list-outline"></ion-icon>
           <ion-label>• Actuales</ion-label>
         </ion-item>
+
+        <ion-item button="true" (click)="historialAbierto = !historialAbierto">
+          <ion-icon slot="start" name="document-text-outline"></ion-icon>
+          <ion-label>Historial Académico</ion-label>
+          <ion-icon slot="end" name="chevron-down-outline" [class.rotated]="historialAbierto"></ion-icon>
+        </ion-item>
+        <ion-item *ngIf="historialAbierto" button="true" routerLink="/alumno/historial" routerLinkActive="active-link" class="sub-item">
+          <ion-icon slot="start" name="list-outline"></ion-icon>
+          <ion-label>• Calificaciones</ion-label>
+        </ion-item>
       </ion-list>
     </ion-content>
   </ion-menu>

@@ -1,0 +1,47 @@
+<ion-content class="ion-padding alumno-shell">
+  <p class="breadcrumb">Historial Académico &gt; Calificaciones</p>
+
+  <div class="acciones-header">
+    <h1>Historial Académico</h1>
+    <ion-button [disabled]="!historial || !historial.semestres.length" (click)="descargarPdf()">
+      <ion-icon slot="start" name="download-outline"></ion-icon>
+      Descargar PDF
+    </ion-button>
+  </div>
+
+  <div class="documento" *ngIf="historial">
+    <p class="introduccion">{{ historial.legenda }}</p>
+
+    <h2>Lista de Materias Por Semestre</h2>
+
+    <ng-container *ngFor="let semestre of historial.semestres">
+      <h3>Semestre {{ semestre.etiqueta }}</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Materia</th>
+            <th class="col-calificacion">Calificación</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let materia of semestre.materias">
+            <td>{{ materia.nombre }}</td>
+            <td class="col-calificacion">{{ materia.calificacion }}</td>
+          </tr>
+          <tr class="fila-promedio">
+            <td>Promedio del Semestre</td>
+            <td class="col-calificacion">{{ semestre.promedio_semestre }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </ng-container>
+
+    <p class="sin-datos" *ngIf="!historial.semestres.length">
+      Aún no hay calificaciones registradas para generar tu historial académico.
+    </p>
+
+    <h2 class="promedio-general" *ngIf="historial.semestres.length">
+      Promedio General: {{ historial.promedio_general !== null ? historial.promedio_general.toFixed(1) : '-' }}
+    </h2>
+  </div>
+</ion-content>

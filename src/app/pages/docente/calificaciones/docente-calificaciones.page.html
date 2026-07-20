@@ -6,251 +6,102 @@
   <div class="selectores">
     <ion-item>
       <ion-label position="stacked">Materia / Grupo</ion-label>
-      <ion-select [(ngModel)]="idAsignacionSeleccionada" (ionChange)="onCambioAsignacion()">
+      <ion-select [(ngModel)]="idAsignacionSeleccionada" (ionChange)="onCambio()">
         <ion-select-option *ngFor="let a of asignaciones" [value]="a.id_asignacion">
           {{ a.materia_nombre }} — {{ a.grupo_nombre }}
         </ion-select-option>
       </ion-select>
     </ion-item>
+    <ion-item>
+      <ion-label position="stacked">Evaluación</ion-label>
+      <ion-select [(ngModel)]="tipoSeleccionado" (ionChange)="onCambio()">
+        <ion-select-option *ngFor="let tipo of tipos" [value]="tipo.valor">{{ tipo.etiqueta }}</ion-select-option>
+      </ion-select>
+    </ion-item>
+    <ion-item *ngIf="respuesta && respuesta.criterios.length">
+      <ion-label position="stacked">Actividad</ion-label>
+      <ion-select [(ngModel)]="idCriterioSeleccionado">
+        <ion-select-option *ngFor="let criterio of respuesta.criterios" [value]="criterio.id_criterio">
+          {{ criterio.nombre }} ({{ criterio.valor_puntos }} pts)
+        </ion-select-option>
+      </ion-select>
+    </ion-item>
   </div>
 
-  <ion-segment [value]="modo" (ionChange)="cambiarModo($any($event.detail.value))" class="modo-segment">
-    <ion-segment-button value="regulares">Parciales regulares</ion-segment-button>
-    <ion-segment-button value="especiales">Extraordinario / Intersemestral</ion-segment-button>
-  </ion-segment>
+  <ng-container *ngIf="respuesta as r">
+    <div class="banner aviso" *ngIf="!r.criterios.length">
+      Aún no defines criterios de evaluación para esta selección.
+      <a routerLink="/docente/criterios">Ir a Criterios de Evaluación</a>
+    </div>
 
-  <!-- Parciales regulares -->
-  <ng-container *ngIf="modo === 'regulares'">
-    <div class="ventanas-parciales">
-      <div class="ventana-chip" *ngFor="let parcial of parciales">
-        <span class="etiqueta">{{ parcial.etiqueta }}</span>
-        <span class="estado" [class.abierta]="parcial.respuesta?.ventana?.abierta" [class.cerrada]="!parcial.respuesta?.ventana?.abierta">
-          {{ parcial.respuesta?.ventana?.abierta ? 'Abierta' : 'Cerrada' }}
-        </span>
-        <ion-button size="small" fill="clear" color="danger" [disabled]="!parcial.respuesta?.ventana?.abierta" (click)="vaciarParcial(parcial)">
-          <ion-icon slot="start" name="trash-outline"></ion-icon>
-          Vaciar
-        </ion-button>
+    <div class="banner aviso" *ngIf="r.criterios.length && r.suma_criterios !== 10">
+      Tus criterios suman {{ r.suma_criterios }} de 10 puntos. Debes completar 10 antes de poder capturar.
+      <a routerLink="/docente/criterios">Ajustar criterios</a>
+    </div>
+
+    <div class="ventana-chip" *ngIf="r.criterios.length && r.suma_criterios === 10">
+      <span class="estado" [class.abierta]="r.ventana.abierta" [class.cerrada]="!r.ventana.abierta">
+        {{ r.ventana.abierta ? 'Ventana abierta hasta ' + r.ventana.fecha_fin : 'Ventana cerrada (solo lectura)' }}
+      </span>
+      <ion-button size="small" fill="clear" color="danger" [disabled]="!r.ventana.abierta" (click)="vaciar()">
+        <ion-icon slot="start" name="trash-outline"></ion-icon>
+        Vaciar
+      </ion-button>
+    </div>
+
+    <ng-container *ngIf="r.criterios.length && r.suma_criterios === 10">
+      <ion-searchbar [(ngModel)]="filtroTexto" placeholder="Buscar Alumno" showClearButton="always" class="buscador"></ion-searchbar>
+
+      <ion-segment [(ngModel)]="filtroEstado" class="filtros-estado">
+        <ion-segment-button value="todos">Todos</ion-segment-button>
+        <ion-segment-button value="aprobados">Aprobados</ion-segment-button>
+        <ion-segment-button value="reprobados">Reprobados</ion-segment-button>
+        <ion-segment-button value="capturada">Capturada</ion-segment-button>
+        <ion-segment-button value="no_capturada">No capturada</ion-segment-button>
+      </ion-segment>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Alumno</th>
+              <th>Total</th>
+              <th>Estado</th>
+              <th>{{ actividadSeleccionada?.nombre }} ({{ actividadSeleccionada?.valor_puntos }} pts)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let fila of alumnosFiltrados">
+              <td>{{ fila.alumno.nombre }} {{ fila.alumno.apellido_paterno }}</td>
+              <td class="total">{{ fila.suma }}</td>
+              <td>
+                <span
+                  class="tag"
+                  [class.aprobado]="estaAprobado(fila)"
+                  [class.reprobado]="estaReprobado(fila)"
+                  [class.sin-capturar]="!tieneCaptura(fila)"
+                >
+                  {{ !tieneCaptura(fila) ? 'Sin capturar' : (estaAprobado(fila) ? 'Aprobado' : 'Reprobado') }}
+                </span>
+              </td>
+              <td>
+                <ion-input
+                  *ngIf="actividadSeleccionada as actividad"
+                  type="number"
+                  [max]="actividad.valor_puntos"
+                  [min]="0"
+                  [disabled]="!r.editable"
+                  [ngModel]="fila.valores[actividad.id_criterio]"
+                  (ionChange)="guardarValor(fila.alumno.matricula, $any($event.detail.value))"
+                ></ion-input>
+              </td>
+            </tr>
+            <tr *ngIf="!alumnosFiltrados.length">
+              <td colspan="4" class="empty">No hay alumnos que coincidan con la búsqueda o el filtro.</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
-    </div>
-
-    <ion-searchbar [(ngModel)]="filtroTexto" placeholder="Buscar Alumno" showClearButton="always" class="buscador"></ion-searchbar>
-
-    <ion-segment [(ngModel)]="filtroEstado" class="filtros-estado">
-      <ion-segment-button value="todos">Todos</ion-segment-button>
-      <ion-segment-button value="aprobados">Aprobados</ion-segment-button>
-      <ion-segment-button value="reprobados">Reprobados</ion-segment-button>
-      <ion-segment-button value="capturada">Capturada</ion-segment-button>
-      <ion-segment-button value="no_capturada">No capturada</ion-segment-button>
-    </ion-segment>
-
-    <div class="table-wrapper">
-      <table>
-        <thead>
-          <tr>
-            <th>Alumno</th>
-            <th>Promedio</th>
-            <th>Estado</th>
-            <th>Acción</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let alumno of alumnosFiltrados">
-            <td>{{ alumno.nombreCompleto }}</td>
-            <td class="total">{{ alumno.promedio ?? '-' }}</td>
-            <td>
-              <span
-                class="tag"
-                [class.aprobado]="estaAprobadoCombinado(alumno)"
-                [class.reprobado]="estaReprobadoCombinado(alumno)"
-                [class.sin-capturar]="!tieneCapturaCombinado(alumno)"
-              >
-                {{ !tieneCapturaCombinado(alumno) ? 'Sin capturar' : (estaAprobadoCombinado(alumno) ? 'Aprobado' : 'Reprobado') }}
-              </span>
-            </td>
-            <td>
-              <ion-button size="small" fill="outline" (click)="seleccionarAlumno(alumno.matricula)">Capturar</ion-button>
-            </td>
-          </tr>
-          <tr *ngIf="!alumnosFiltrados.length">
-            <td colspan="4" class="empty">No hay alumnos que coincidan con la búsqueda o el filtro.</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <ion-modal [isOpen]="!!matriculaSeleccionada" (didDismiss)="cerrarAlumno()">
-      <ng-template>
-        <ion-header>
-          <ion-toolbar>
-            <ion-title>{{ nombreAlumnoSeleccionado }}</ion-title>
-            <ion-buttons slot="end">
-              <ion-button (click)="cerrarAlumno()">Cerrar</ion-button>
-            </ion-buttons>
-          </ion-toolbar>
-        </ion-header>
-        <ion-content class="ion-padding">
-          <ng-container *ngFor="let parcial of parciales">
-            <h3>{{ parcial.etiqueta }}</h3>
-
-            <p class="aviso" *ngIf="parcial.respuesta && !parcial.respuesta.criterios.length">
-              Aún no se definen criterios de evaluación para este parcial.
-            </p>
-            <p class="aviso" *ngIf="parcial.respuesta && parcial.respuesta.criterios.length && parcial.respuesta.suma_criterios !== 10">
-              Los criterios de este parcial suman {{ parcial.respuesta.suma_criterios }} de 10 puntos.
-            </p>
-            <p class="aviso" *ngIf="parcial.respuesta && parcial.respuesta.criterios.length && !parcial.respuesta.ventana.abierta">
-              La ventana de captura de este parcial está cerrada (solo lectura).
-            </p>
-
-            <table class="tabla-criterios" *ngIf="parcial.respuesta && parcial.respuesta.criterios.length">
-              <thead>
-                <tr>
-                  <th>Criterio</th>
-                  <th>Valor</th>
-                  <th>Obtenido</th>
-                </tr>
-              </thead>
-              <tbody>
-                <ng-container *ngIf="filaDelParcial(parcial, matriculaSeleccionada!) as fila">
-                  <tr *ngFor="let criterio of parcial.respuesta.criterios">
-                    <td>{{ criterio.nombre }}</td>
-                    <td>{{ criterio.valor_puntos }}</td>
-                    <td>
-                      <ion-input
-                        type="number"
-                        [max]="criterio.valor_puntos"
-                        [min]="0"
-                        [disabled]="!parcial.respuesta!.editable"
-                        [ngModel]="fila.valores[criterio.id_criterio]"
-                        (ionChange)="guardarValorRegular(parcial.tipo, fila.alumno.matricula, criterio.id_criterio, $any($event.detail.value), criterio.valor_puntos)"
-                      ></ion-input>
-                    </td>
-                  </tr>
-                  <tr class="fila-total">
-                    <td>Total</td>
-                    <td>10</td>
-                    <td>{{ fila.suma }}</td>
-                  </tr>
-                </ng-container>
-              </tbody>
-            </table>
-          </ng-container>
-        </ion-content>
-      </ng-template>
-    </ion-modal>
-  </ng-container>
-
-  <!-- Extraordinario / Intersemestral -->
-  <ng-container *ngIf="modo === 'especiales'">
-    <div class="selectores">
-      <ion-item>
-        <ion-label position="stacked">Evaluación especial</ion-label>
-        <ion-select [(ngModel)]="tipoEspecial" (ionChange)="cargarEspecial()">
-          <ion-select-option *ngFor="let tipo of especiales" [value]="tipo.tipo">{{ tipo.etiqueta }}</ion-select-option>
-        </ion-select>
-      </ion-item>
-    </div>
-
-    <div class="ventanas-parciales" *ngIf="respuestaEspecial">
-      <div class="ventana-chip">
-        <span class="estado" [class.abierta]="respuestaEspecial.ventana.abierta" [class.cerrada]="!respuestaEspecial.ventana.abierta">
-          {{ respuestaEspecial.ventana.abierta ? 'Ventana abierta' : 'Ventana cerrada' }}
-        </span>
-        <ion-button size="small" fill="clear" color="danger" [disabled]="!respuestaEspecial.ventana.abierta" (click)="vaciarEspecial()">
-          <ion-icon slot="start" name="trash-outline"></ion-icon>
-          Vaciar
-        </ion-button>
-      </div>
-    </div>
-
-    <ion-searchbar [(ngModel)]="filtroTexto" placeholder="Buscar Alumno" showClearButton="always" class="buscador"></ion-searchbar>
-
-    <ion-segment [(ngModel)]="filtroEstado" class="filtros-estado">
-      <ion-segment-button value="todos">Todos</ion-segment-button>
-      <ion-segment-button value="aprobados">Aprobados</ion-segment-button>
-      <ion-segment-button value="reprobados">Reprobados</ion-segment-button>
-      <ion-segment-button value="capturada">Capturada</ion-segment-button>
-      <ion-segment-button value="no_capturada">No capturada</ion-segment-button>
-    </ion-segment>
-
-    <div class="table-wrapper" *ngIf="respuestaEspecial">
-      <table>
-        <thead>
-          <tr>
-            <th>Alumno</th>
-            <th>Total</th>
-            <th>Estado</th>
-            <th>Acción</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let fila of alumnosFiltradosEspecial">
-            <td>{{ fila.alumno.nombre }} {{ fila.alumno.apellido_paterno }}</td>
-            <td class="total">{{ fila.suma }}</td>
-            <td>
-              <span class="tag" [class.aprobado]="estaAprobado(fila)" [class.reprobado]="estaReprobado(fila)" [class.sin-capturar]="!tieneCaptura(fila)">
-                {{ !tieneCaptura(fila) ? 'Sin capturar' : (estaAprobado(fila) ? 'Aprobado' : 'Reprobado') }}
-              </span>
-            </td>
-            <td>
-              <ion-button size="small" fill="outline" (click)="seleccionarAlumno(fila.alumno.matricula)">Capturar</ion-button>
-            </td>
-          </tr>
-          <tr *ngIf="!alumnosFiltradosEspecial.length">
-            <td colspan="4" class="empty">No hay alumnos que coincidan con la búsqueda o el filtro.</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <ion-modal [isOpen]="!!matriculaSeleccionada" (didDismiss)="cerrarAlumno()">
-      <ng-template>
-        <ion-header>
-          <ion-toolbar>
-            <ion-title>{{ nombreAlumnoSeleccionado }}</ion-title>
-            <ion-buttons slot="end">
-              <ion-button (click)="cerrarAlumno()">Cerrar</ion-button>
-            </ion-buttons>
-          </ion-toolbar>
-        </ion-header>
-        <ion-content class="ion-padding" *ngIf="respuestaEspecial as r">
-          <table class="tabla-criterios">
-            <thead>
-              <tr>
-                <th>Criterio</th>
-                <th>Valor</th>
-                <th>Obtenido</th>
-              </tr>
-            </thead>
-            <tbody>
-              <ng-container *ngFor="let fila of r.alumnos">
-                <ng-container *ngIf="fila.alumno.matricula === matriculaSeleccionada">
-                  <tr *ngFor="let criterio of r.criterios">
-                    <td>{{ criterio.nombre }}</td>
-                    <td>{{ criterio.valor_puntos }}</td>
-                    <td>
-                      <ion-input
-                        type="number"
-                        [max]="criterio.valor_puntos"
-                        [min]="0"
-                        [disabled]="!r.editable"
-                        [ngModel]="fila.valores[criterio.id_criterio]"
-                        (ionChange)="guardarValorEspecial(fila.alumno.matricula, criterio.id_criterio, $any($event.detail.value), criterio.valor_puntos)"
-                      ></ion-input>
-                    </td>
-                  </tr>
-                  <tr class="fila-total">
-                    <td>Total</td>
-                    <td>10</td>
-                    <td>{{ fila.suma }}</td>
-                  </tr>
-                </ng-container>
-              </ng-container>
-            </tbody>
-          </table>
-        </ion-content>
-      </ng-template>
-    </ion-modal>
+    </ng-container>
   </ng-container>
 </ion-content>

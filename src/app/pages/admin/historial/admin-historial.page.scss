@@ -1,0 +1,62 @@
+.admin-shell {
+  --background: #f4f7fb;
+}
+
+.page-header {
+  margin-bottom: 1rem;
+}
+
+.page-header h1 {
+  margin: 0;
+  color: #0f3d67;
+  font-size: 1.3rem;
+  font-weight: 800;
+}
+
+.ayuda {
+  color: #64748b;
+  font-size: 0.85rem;
+  max-width: 720px;
+  margin-bottom: 1rem;
+}
+
+.ayuda code {
+  background: #eef4fb;
+  color: #1f6cb5;
+  border-radius: 6px;
+  padding: 0.05rem 0.35rem;
+  font-weight: 600;
+}
+
+ion-item {
+  --background: #f9fbfd;
+  border-radius: 14px;
+  margin-bottom: 0.6rem;
+  --padding-start: 0.85rem;
+  --inner-padding-end: 0.85rem;
+  max-width: 720px;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 1.5rem;
+  max-width: 720px;
+}
+
+h3 {
+  color: #0f3d67;
+  margin: 0 0 0.5rem;
+}
+
+.vista-previa {
+  background: #fff;
+  border-radius: 16px;
+  padding: 1.25rem;
+  box-shadow: 0 10px 30px rgba(15, 61, 103, 0.1);
+  max-width: 720px;
+  white-space: pre-line;
+  font-size: 0.85rem;
+  color: #1e293b;
+  text-align: center;
+}

@@ -88,6 +88,7 @@ export class AdminGruposPage {
   docenteSeleccionado: string | null = null;
   materiaSeleccionada: string | null = null;
   filtroMateriaTexto = '';
+  filtroSemestreAsignacion: number | null = null;
   grupoParaAsignacion: string | null = null;
   periodoParaAsignacion: string | null = null;
   asignacionesDocente: AsignacionAcademica[] = [];
@@ -121,12 +122,20 @@ export class AdminGruposPage {
     this.periodos = periodos;
   }
 
+  get gruposFiltradosPorSemestre(): GrupoAdmin[] {
+    if (!this.filtroSemestreAsignacion) {
+      return this.grupos;
+    }
+    return this.grupos.filter((grupo) => grupo.semestre === this.filtroSemestreAsignacion);
+  }
+
   get materiasFiltradasParaAsignar(): MateriaAdmin[] {
     const texto = this.filtroMateriaTexto.trim().toLowerCase();
-    if (!texto) {
-      return this.materias;
-    }
-    return this.materias.filter((materia) => materia.nombre.toLowerCase().includes(texto));
+    return this.materias.filter((materia) => {
+      const coincideTexto = !texto || materia.nombre.toLowerCase().includes(texto);
+      const coincideSemestre = !this.filtroSemestreAsignacion || materia.semestre === this.filtroSemestreAsignacion;
+      return coincideTexto && coincideSemestre;
+    });
   }
 
   get materiaSeleccionadaNombre(): string | null {
@@ -135,6 +144,24 @@ export class AdminGruposPage {
 
   seleccionarMateria(idMateria: string): void {
     this.materiaSeleccionada = idMateria;
+  }
+
+  onCambioSemestreAsignacion(): void {
+    this.materiaSeleccionada = null;
+    if (this.grupoParaAsignacion) {
+      const grupoActual = this.grupos.find((g) => g.id_grupo === this.grupoParaAsignacion);
+      if (this.filtroSemestreAsignacion && grupoActual?.semestre !== this.filtroSemestreAsignacion) {
+        this.grupoParaAsignacion = null;
+      }
+    }
+  }
+
+  onCambioGrupoAsignacion(): void {
+    const grupo = this.grupos.find((g) => g.id_grupo === this.grupoParaAsignacion);
+    if (grupo) {
+      this.filtroSemestreAsignacion = grupo.semestre;
+      this.materiaSeleccionada = null;
+    }
   }
 
   periodoNombre(idPeriodo: string | null | undefined): string {

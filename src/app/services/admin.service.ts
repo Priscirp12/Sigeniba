@@ -187,4 +187,13 @@ export class AdminService {
   async cambiarCredenciales(payload: Record<string, unknown>): Promise<{ success: boolean; id_usuario: string }> {
     return this.api.put('usuarios.php', payload);
   }
+
+  // Configuración del Historial Académico
+  async getPlantillaHistorial(): Promise<{ plantilla_legenda: string }> {
+    return this.api.get<{ plantilla_legenda: string }>('configuracion_historial.php');
+  }
+
+  async guardarPlantillaHistorial(plantillaLegenda: string): Promise<{ success: boolean }> {
+    return this.api.put('configuracion_historial.php', { plantilla_legenda: plantillaLegenda });
+  }
 }

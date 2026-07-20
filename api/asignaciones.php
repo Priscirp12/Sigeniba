@@ -47,9 +47,37 @@ if ($method === 'POST') {
         send_error('id_grupo, id_materia, id_docente e id_periodo son requeridos');
     }
 
+    $stmt = $pdo->prepare('SELECT semestre FROM grupos WHERE id_grupo = ?');
+    $stmt->execute([$idGrupo]);
+    $grupo = $stmt->fetch();
+    if (!$grupo) {
+        send_error('Grupo no encontrado', 404);
+    }
+
+    $stmt = $pdo->prepare('SELECT semestre FROM materias WHERE id_materia = ?');
+    $stmt->execute([$idMateria]);
+    $materia = $stmt->fetch();
+    if (!$materia) {
+        send_error('Materia no encontrada', 404);
+    }
+
+    if ($materia['semestre'] !== null && $grupo['semestre'] !== null && (int) $materia['semestre'] !== (int) $grupo['semestre']) {
+        send_error('Esta materia es de semestre ' . $materia['semestre'] . ' y no puede asignarse a un grupo de semestre ' . $grupo['semestre']);
+    }
+
+    $stmt = $pdo->prepare('SELECT id_asignacion FROM asignaciones_academicas WHERE id_grupo = ? AND id_materia = ? AND id_periodo = ?');
+    $stmt->execute([$idGrupo, $idMateria, $idPeriodo]);
+    if ($stmt->fetch()) {
+        send_error('Esta materia ya está asignada a este grupo en el periodo seleccionado', 409);
+    }
+
     $idAsignacion = generate_id('ASG');
-    $stmt = $pdo->prepare('INSERT INTO asignaciones_academicas (id_asignacion, id_grupo, id_materia, id_docente, id_periodo) VALUES (?, ?, ?, ?, ?)');
-    $stmt->execute([$idAsignacion, $idGrupo, $idMateria, $idDocente, $idPeriodo]);
+    try {
+        $stmt = $pdo->prepare('INSERT INTO asignaciones_academicas (id_asignacion, id_grupo, id_materia, id_docente, id_periodo) VALUES (?, ?, ?, ?, ?)');
+        $stmt->execute([$idAsignacion, $idGrupo, $idMateria, $idDocente, $idPeriodo]);
+    } catch (Throwable $e) {
+        send_error('Esta materia ya está asignada a este grupo en el periodo seleccionado', 409);
+    }
 
     echo json_encode(['success' => true, 'id_asignacion' => $idAsignacion]);
     exit;

@@ -16,7 +16,14 @@ import {
   IonToolbar,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { chevronDownOutline, listOutline, logOutOutline, personCircleOutline, schoolOutline } from 'ionicons/icons';
+import {
+  chevronDownOutline,
+  documentTextOutline,
+  listOutline,
+  logOutOutline,
+  personCircleOutline,
+  schoolOutline,
+} from 'ionicons/icons';
 import { AuthService } from '../../services/auth.service';
 
 @Component({
@@ -43,12 +50,13 @@ import { AuthService } from '../../services/auth.service';
 })
 export class AlumnoShellPage {
   calificacionesAbierto = true;
+  historialAbierto = false;
 
   constructor(
     private readonly authService: AuthService,
     private readonly router: Router,
   ) {
-    addIcons({ schoolOutline, listOutline, personCircleOutline, logOutOutline, chevronDownOutline });
+    addIcons({ schoolOutline, listOutline, personCircleOutline, logOutOutline, chevronDownOutline, documentTextOutline });
   }
 
   get usuario() {

@@ -55,6 +55,10 @@ export const routes: Routes = [
         path: 'cuenta',
         loadComponent: () => import('./pages/admin/cuenta/admin-cuenta.page').then((m) => m.AdminCuentaPage),
       },
+      {
+        path: 'historial',
+        loadComponent: () => import('./pages/admin/historial/admin-historial.page').then((m) => m.AdminHistorialPage),
+      },
     ],
   },
   {
@@ -109,6 +113,10 @@ export const routes: Routes = [
         path: '',
         loadComponent: () =>
           import('./pages/alumno/calificaciones/alumno-calificaciones.page').then((m) => m.AlumnoCalificacionesPage),
+      },
+      {
+        path: 'historial',
+        loadComponent: () => import('./pages/alumno/historial/alumno-historial.page').then((m) => m.AlumnoHistorialPage),
       },
     ],
   },

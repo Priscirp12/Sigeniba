@@ -45,14 +45,17 @@ if ($method === 'PUT' && $action === 'asignar_alumnos') {
 
     $placeholders = implode(',', array_fill(0, count($matriculas), '?'));
 
-    // Solo se permite cambiar de grupo a un alumno cuando su periodo escolar
-    // no está en curso (es decir, entre semestres). Si el periodo del alumno
-    // está activo hoy, esa fila se omite silenciosamente.
+    // Solo se permite cambiar de grupo a un alumno cuando no tiene ninguna
+    // ventana de captura activa hoy (parcial, extraordinario o intersemestral)
+    // para su periodo, es decir, cuando el semestre no está en curso.
     $stmt = $pdo->prepare("UPDATE alumnos a
-                            LEFT JOIN periodos_escolares p ON p.id_periodo = a.id_periodo
                             SET a.id_grupo = ?
                             WHERE a.matricula IN ($placeholders)
-                              AND (a.id_periodo IS NULL OR CURDATE() < p.fecha_inicio OR CURDATE() > p.fecha_fin)");
+                              AND NOT EXISTS (
+                                  SELECT 1 FROM ventanas_captura v
+                                  WHERE v.id_periodo = a.id_periodo
+                                    AND CURDATE() BETWEEN v.fecha_inicio AND v.fecha_fin
+                              )");
     $stmt->execute(array_merge([$idGrupo], $matriculas));
     $actualizados = $stmt->rowCount();
     $omitidos = count($matriculas) - $actualizados;

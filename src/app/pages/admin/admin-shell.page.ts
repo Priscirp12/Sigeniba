@@ -20,6 +20,7 @@ import {
   bookOutline,
   calendarOutline,
   chevronDownOutline,
+  documentTextOutline,
   keyOutline,
   logOutOutline,
   peopleOutline,
@@ -72,6 +73,7 @@ export class AdminShellPage {
       personCircleOutline,
       logOutOutline,
       chevronDownOutline,
+      documentTextOutline,
     });
   }
 
