@@ -64,6 +64,7 @@
         <table>
           <thead>
             <tr>
+              <th>Matrícula</th>
               <th>Alumno</th>
               <th>Total</th>
               <th>Estado</th>
@@ -72,6 +73,7 @@
           </thead>
           <tbody>
             <tr *ngFor="let fila of alumnosFiltrados">
+              <td>{{ fila.alumno.matricula }}</td>
               <td>{{ fila.alumno.nombre }} {{ fila.alumno.apellido_paterno }}</td>
               <td class="total">{{ fila.suma }}</td>
               <td>
@@ -97,7 +99,7 @@
               </td>
             </tr>
             <tr *ngIf="!alumnosFiltrados.length">
-              <td colspan="4" class="empty">No hay alumnos que coincidan con la búsqueda o el filtro.</td>
+              <td colspan="5" class="empty">No hay alumnos que coincidan con la búsqueda o el filtro.</td>
             </tr>
           </tbody>
         </table>

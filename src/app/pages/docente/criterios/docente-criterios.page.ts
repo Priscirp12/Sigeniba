@@ -30,11 +30,6 @@ interface PanelParcial {
   tieneCalificaciones: boolean;
 }
 
-interface FilaCombinada {
-  criterio: CriterioEvaluacion;
-  etiquetaParcial: string;
-}
-
 const PARCIALES: { tipo: TipoParcial; etiqueta: string }[] = [
   { tipo: 'parcial1', etiqueta: 'Parcial 1' },
   { tipo: 'parcial2', etiqueta: 'Parcial 2' },
@@ -130,8 +125,6 @@ export class DocenteCriteriosPage {
   }
 
   // --- Parciales regulares ---
-  criteriosCombinados: FilaCombinada[] = [];
-
   async cargarPanelesRegulares(): Promise<void> {
     if (!this.idAsignacionSeleccionada) {
       return;
@@ -142,7 +135,6 @@ export class DocenteCriteriosPage {
     } finally {
       this.cargando = false;
     }
-    this.actualizarCriteriosCombinados();
   }
 
   private async cargarPanel(panel: PanelParcial): Promise<void> {
@@ -160,16 +152,6 @@ export class DocenteCriteriosPage {
 
   estaBloqueado(tipo: CriterioEvaluacion['tipo']): boolean {
     return this.paneles.find((p) => p.tipo === tipo)?.tieneCalificaciones ?? false;
-  }
-
-  private actualizarCriteriosCombinados(): void {
-    const filas: FilaCombinada[] = [];
-    for (const panel of this.paneles) {
-      for (const criterio of panel.criterios) {
-        filas.push({ criterio, etiquetaParcial: panel.etiqueta });
-      }
-    }
-    this.criteriosCombinados = filas;
   }
 
   sumaPanel(panel: PanelParcial): number {
@@ -203,7 +185,6 @@ export class DocenteCriteriosPage {
       this.nuevoNombre = '';
       this.nuevoValor = null;
       await this.cargarPanel(panel);
-      this.actualizarCriteriosCombinados();
       await this.mostrarToast('Criterio agregado correctamente', 'success');
     } catch (error) {
       await this.mostrarToast(error instanceof Error ? error.message : 'Ocurrió un error al agregar el criterio', 'danger');
@@ -299,7 +280,6 @@ export class DocenteCriteriosPage {
     const panel = this.paneles.find((p) => p.tipo === criterio.tipo);
     if (panel) {
       await this.cargarPanel(panel);
-      this.actualizarCriteriosCombinados();
     } else {
       await this.cargarCriteriosEspecial();
     }
