@@ -1,8 +1,10 @@
-<ion-split-pane contentId="alumno-content">
-  <ion-menu contentId="alumno-content" class="alumno-menu">
+<ion-split-pane contentId="alumno-content" [when]="menuLateral.splitPaneWhen">
+  <ion-menu menuId="alumno-menu" contentId="alumno-content" class="alumno-menu">
     <ion-header>
       <ion-toolbar>
-        <ion-title>SIGENIBA</ion-title>
+        <ion-title>
+          <button type="button" class="brand-button" title="Ir al inicio" (click)="irAlInicio()">SIGENIBA</button>
+        </ion-title>
       </ion-toolbar>
     </ion-header>
     <ion-content class="menu-content">
@@ -43,7 +45,19 @@
   <div class="ion-page" id="alumno-content">
     <ion-header>
       <ion-toolbar class="topbar">
-        <ion-title>SIGENIBA</ion-title>
+        <ion-buttons slot="start">
+          <ion-button
+            class="menu-toggle"
+            [title]="menuLateral.visible ? 'Ocultar menú' : 'Mostrar menú'"
+            aria-label="Ocultar o mostrar el menú lateral"
+            (click)="alternarMenu()"
+          >
+            <ion-icon slot="icon-only" name="menu-outline"></ion-icon>
+          </ion-button>
+        </ion-buttons>
+        <ion-title>
+          <button type="button" class="brand-button" title="Ir al inicio" (click)="irAlInicio()">SIGENIBA</button>
+        </ion-title>
         <div slot="end" class="user-chip">
           <ion-icon name="person-circle-outline"></ion-icon>
           <div class="chip-info">

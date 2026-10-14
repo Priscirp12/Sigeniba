@@ -17,11 +17,12 @@ import {
   IonSelectOption,
   IonTitle,
   IonToolbar,
-  ToastController,
+  ViewWillEnter,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { addOutline, createOutline } from 'ionicons/icons';
 import { AdminService, DocenteAdmin } from '../../../services/admin.service';
+import { AlertaService, TipoAlerta } from '../../../services/alerta.service';
 
 interface DocenteForm {
   id_docente: string;
@@ -73,7 +74,7 @@ const FORM_VACIO: DocenteForm = {
     IonSelectOption,
   ],
 })
-export class AdminDocentesPage {
+export class AdminDocentesPage implements ViewWillEnter {
   docentes: DocenteAdmin[] = [];
   cargando = false;
   guardando = false;
@@ -85,9 +86,13 @@ export class AdminDocentesPage {
 
   constructor(
     private readonly adminService: AdminService,
-    private readonly toastController: ToastController,
+    private readonly alertas: AlertaService,
   ) {
     addIcons({ addOutline, createOutline });
+    this.cargarDatos();
+  }
+
+  ionViewWillEnter(): void {
     this.cargarDatos();
   }
 
@@ -140,13 +145,35 @@ export class AdminDocentesPage {
     this.modalAbierto = false;
   }
 
+  bloquearTeclaNoNumerica(event: KeyboardEvent): void {
+    const teclasPermitidas = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Home', 'End'];
+    if (teclasPermitidas.includes(event.key) || event.ctrlKey || event.metaKey) {
+      return;
+    }
+    if (!/^\d$/.test(event.key)) {
+      event.preventDefault();
+    }
+  }
+
+  onTelefonoInput(valor: string): void {
+    this.form.telefono = valor.replace(/\D/g, '').slice(0, 10);
+  }
+
   async guardar(): Promise<void> {
-    if (!this.form.nombre || !this.form.apellido_paterno || !this.form.id_docente || !this.form.especialidad) {
-      await this.mostrarToast('Nombre, apellido paterno, clave y especialidad son requeridos', 'danger');
+    if (!this.form.nombre || !this.form.apellido_paterno || !this.form.id_docente || !this.form.edad || !this.form.especialidad) {
+      await this.mostrarToast('Nombre, apellido paterno, clave, edad y especialidad son requeridos', 'danger');
       return;
     }
     if (!this.modoEdicion && !this.form.password) {
       await this.mostrarToast('La contraseña es requerida para un docente nuevo', 'danger');
+      return;
+    }
+    if (this.form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.form.email)) {
+      await this.mostrarToast('El correo no tiene un formato válido (ej. usuario@gmail.com)', 'danger');
+      return;
+    }
+    if (this.form.telefono && !/^\d{10}$/.test(this.form.telefono)) {
+      await this.mostrarToast('El teléfono debe tener exactamente 10 dígitos numéricos', 'danger');
       return;
     }
 
@@ -180,8 +207,7 @@ export class AdminDocentesPage {
     }
   }
 
-  private async mostrarToast(message: string, color: 'success' | 'danger'): Promise<void> {
-    const toast = await this.toastController.create({ message, color, duration: 2500, position: 'bottom' });
-    await toast.present();
+  private async mostrarToast(message: string, color: TipoAlerta): Promise<void> {
+    await this.alertas.mostrar(message, color);
   }
 }

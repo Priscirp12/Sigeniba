@@ -6,8 +6,12 @@ export interface AlumnoAdmin {
   id_usuario: string;
   id_grupo: string | null;
   id_periodo: string | null;
+  id_ciclo: string | null;
   email: string | null;
   telefono: string | null;
+  estatus: 'activo' | 'inactivo';
+  fecha_baja: string | null;
+  motivo_baja: string | null;
   nombre: string;
   apellido_paterno: string;
   apellido_materno: string | null;
@@ -42,9 +46,18 @@ export interface GrupoAdmin {
   id_grupo: string;
   nombre: string;
   semestre: number;
+  id_periodo: string | null;
+  id_ciclo: string | null;
   clave_tutor: string | null;
   tutor_nombre?: string | null;
   tutor_apellido_paterno?: string | null;
+}
+
+export interface CicloEscolar {
+  id_ciclo: string;
+  nombre: string;
+  fecha_inicio: string;
+  fecha_fin: string;
 }
 
 export interface AsignacionAcademica {
@@ -69,6 +82,7 @@ export type TipoVentanaCaptura = 'parcial1' | 'parcial2' | 'parcial3' | 'extraor
 export interface VentanaCaptura {
   id_ventana: string;
   id_periodo: string;
+  semestre: number;
   tipo: TipoVentanaCaptura;
   fecha_inicio: string;
   fecha_fin: string;
@@ -79,6 +93,7 @@ export interface AlumnoFiltro {
   semestre?: number | string;
   id_grupo?: string;
   sin_grupo?: boolean;
+  estatus?: 'activo' | 'inactivo';
 }
 
 @Injectable({
@@ -94,6 +109,7 @@ export class AdminService {
     if (filtro.semestre) params.set('semestre', String(filtro.semestre));
     if (filtro.id_grupo) params.set('id_grupo', filtro.id_grupo);
     if (filtro.sin_grupo) params.set('sin_grupo', '1');
+    if (filtro.estatus) params.set('estatus', filtro.estatus);
     const query = params.toString();
     return this.api.get<AlumnoAdmin[]>(`alumnos.php${query ? '?' + query : ''}`);
   }
@@ -104,6 +120,14 @@ export class AdminService {
 
   async actualizarAlumno(payload: Record<string, unknown>): Promise<{ success: boolean; matricula: string }> {
     return this.api.put('alumnos.php', payload);
+  }
+
+  async darBajaTemporal(matricula: string, motivo: string): Promise<{ success: boolean }> {
+    return this.api.put('alumnos.php?action=baja', { matricula, motivo });
+  }
+
+  async reincorporarAlumno(matricula: string, idGrupo: string): Promise<{ success: boolean }> {
+    return this.api.put('alumnos.php?action=reincorporar', { matricula, id_grupo: idGrupo });
   }
 
   // Docentes
@@ -152,6 +176,14 @@ export class AdminService {
     return this.api.put('grupos.php?action=asignar_tutor', { id_grupo: idGrupo, id_docente: idDocente });
   }
 
+  async avanzarSemestre(payload: {
+    id_grupo_origen: string;
+    nombre_grupo_destino: string;
+    id_ciclo_destino: string | null;
+  }): Promise<{ success: boolean; id_grupo_destino: string; actualizados: number; omitidos: number }> {
+    return this.api.put('grupos.php?action=avanzar_semestre', payload);
+  }
+
   // Asignaciones académicas (materia <-> docente <-> grupo <-> periodo)
   async getAsignaciones(filtro: { id_grupo?: string; id_docente?: string } = {}): Promise<AsignacionAcademica[]> {
     const params = new URLSearchParams();
@@ -174,9 +206,18 @@ export class AdminService {
     return this.api.post('periodos.php', payload);
   }
 
+  // Ciclos escolares (años, ej. "2024-2025" — distintos de la generación/periodo)
+  async getCiclosEscolares(): Promise<CicloEscolar[]> {
+    return this.api.get<CicloEscolar[]>('ciclos_escolares.php');
+  }
+
+  async crearCicloEscolar(payload: Record<string, unknown>): Promise<{ success: boolean; id_ciclo: string }> {
+    return this.api.post('ciclos_escolares.php', payload);
+  }
+
   // Ventanas de captura de calificaciones
-  async getVentanasCaptura(idPeriodo: string): Promise<VentanaCaptura[]> {
-    return this.api.get<VentanaCaptura[]>(`ventanas_captura.php?id_periodo=${idPeriodo}`);
+  async getVentanasCaptura(idPeriodo: string, semestre: number): Promise<VentanaCaptura[]> {
+    return this.api.get<VentanaCaptura[]>(`ventanas_captura.php?id_periodo=${idPeriodo}&semestre=${semestre}`);
   }
 
   async guardarVentanaCaptura(payload: Record<string, unknown>): Promise<{ success: boolean; id_ventana: string }> {

@@ -14,15 +14,21 @@ import {
   IonModal,
   IonNote,
   IonSearchbar,
+  IonSegment,
+  IonSegmentButton,
   IonSelect,
   IonSelectOption,
+  IonTextarea,
   IonTitle,
   IonToolbar,
-  ToastController,
+  ViewWillEnter,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { addOutline, createOutline, informationCircleOutline } from 'ionicons/icons';
-import { AdminService, AlumnoAdmin, PeriodoEscolar } from '../../../services/admin.service';
+import { addOutline, createOutline, informationCircleOutline, pauseCircleOutline, playCircleOutline } from 'ionicons/icons';
+import { AdminService, AlumnoAdmin, CicloEscolar, GrupoAdmin, PeriodoEscolar } from '../../../services/admin.service';
+import { AlertaService, TipoAlerta } from '../../../services/alerta.service';
+
+type FiltroEstatus = 'todos' | 'activo' | 'inactivo';
 
 interface AlumnoForm {
   matricula: string;
@@ -35,6 +41,7 @@ interface AlumnoForm {
   email: string;
   telefono: string;
   id_periodo: string | null;
+  id_ciclo: string | null;
 }
 
 const FORM_VACIO: AlumnoForm = {
@@ -48,6 +55,7 @@ const FORM_VACIO: AlumnoForm = {
   email: '',
   telefono: '',
   id_periodo: null,
+  id_ciclo: null,
 };
 
 @Component({
@@ -71,16 +79,22 @@ const FORM_VACIO: AlumnoForm = {
     IonInput,
     IonNote,
     IonSearchbar,
+    IonSegment,
+    IonSegmentButton,
     IonSelect,
     IonSelectOption,
+    IonTextarea,
   ],
 })
-export class AdminAlumnosPage {
+export class AdminAlumnosPage implements ViewWillEnter {
   alumnos: AlumnoAdmin[] = [];
   periodos: PeriodoEscolar[] = [];
+  ciclos: CicloEscolar[] = [];
+  grupos: GrupoAdmin[] = [];
   cargando = false;
   guardando = false;
   filtroTexto = '';
+  filtroEstatus: FiltroEstatus = 'todos';
 
   modalAbierto = false;
   modoEdicion = false;
@@ -90,20 +104,37 @@ export class AdminAlumnosPage {
   modalDetalleAbierto = false;
   alumnoDetalle: AlumnoAdmin | null = null;
 
+  modalBajaAbierto = false;
+  alumnoBaja: AlumnoAdmin | null = null;
+  motivoBaja = '';
+
+  modalReincorporarAbierto = false;
+  alumnoReincorporar: AlumnoAdmin | null = null;
+  grupoReincorporacion: string | null = null;
+
+  procesandoEstatus = false;
+
   constructor(
     private readonly adminService: AdminService,
-    private readonly toastController: ToastController,
+    private readonly alertas: AlertaService,
   ) {
-    addIcons({ addOutline, createOutline, informationCircleOutline });
+    addIcons({ addOutline, createOutline, informationCircleOutline, pauseCircleOutline, playCircleOutline });
+    this.cargarDatos();
+  }
+
+  ionViewWillEnter(): void {
     this.cargarDatos();
   }
 
   get alumnosFiltrados(): AlumnoAdmin[] {
     const texto = this.filtroTexto.trim().toLowerCase();
+    const porEstatus = this.filtroEstatus === 'todos'
+      ? this.alumnos
+      : this.alumnos.filter((alumno) => alumno.estatus === this.filtroEstatus);
     if (!texto) {
-      return this.alumnos;
+      return porEstatus;
     }
-    return this.alumnos.filter((alumno) => {
+    return porEstatus.filter((alumno) => {
       const nombreCompleto = `${alumno.nombre} ${alumno.apellido_paterno} ${alumno.apellido_materno ?? ''}`.toLowerCase();
       return nombreCompleto.includes(texto) || alumno.matricula.toLowerCase().includes(texto);
     });
@@ -112,9 +143,16 @@ export class AdminAlumnosPage {
   async cargarDatos(): Promise<void> {
     this.cargando = true;
     try {
-      const [alumnos, periodos] = await Promise.all([this.adminService.getAlumnos(), this.adminService.getPeriodos()]);
+      const [alumnos, periodos, ciclos, grupos] = await Promise.all([
+        this.adminService.getAlumnos(),
+        this.adminService.getPeriodos(),
+        this.adminService.getCiclosEscolares(),
+        this.adminService.getGrupos(),
+      ]);
       this.alumnos = alumnos;
       this.periodos = periodos;
+      this.ciclos = ciclos;
+      this.grupos = grupos;
     } finally {
       this.cargando = false;
     }
@@ -141,6 +179,7 @@ export class AdminAlumnosPage {
       email: alumno.email ?? '',
       telefono: alumno.telefono ?? '',
       id_periodo: alumno.id_periodo,
+      id_ciclo: alumno.id_ciclo,
     };
     this.modalAbierto = true;
   }
@@ -158,6 +197,69 @@ export class AdminAlumnosPage {
     this.modalDetalleAbierto = false;
   }
 
+  abrirBaja(alumno: AlumnoAdmin): void {
+    this.alumnoBaja = alumno;
+    this.motivoBaja = '';
+    this.modalBajaAbierto = true;
+  }
+
+  cerrarBaja(): void {
+    this.modalBajaAbierto = false;
+  }
+
+  async confirmarBaja(): Promise<void> {
+    if (!this.alumnoBaja) {
+      return;
+    }
+    this.procesandoEstatus = true;
+    try {
+      await this.adminService.darBajaTemporal(this.alumnoBaja.matricula, this.motivoBaja.trim());
+      await this.mostrarToast('Alumno dado de baja temporal. Su estatus ahora es inactivo.', 'success');
+      this.modalBajaAbierto = false;
+      await this.cargarDatos();
+    } catch (error) {
+      await this.mostrarToast(error instanceof Error ? error.message : 'Ocurrió un error al dar de baja', 'danger');
+    } finally {
+      this.procesandoEstatus = false;
+    }
+  }
+
+  abrirReincorporar(alumno: AlumnoAdmin): void {
+    this.alumnoReincorporar = alumno;
+    this.grupoReincorporacion = null;
+    this.modalReincorporarAbierto = true;
+  }
+
+  cerrarReincorporar(): void {
+    this.modalReincorporarAbierto = false;
+  }
+
+  get gruposReincorporacion(): GrupoAdmin[] {
+    const grupoAnterior = this.alumnoReincorporar?.id_grupo;
+    return this.grupos.filter((grupo) => grupo.id_grupo !== grupoAnterior);
+  }
+
+  async confirmarReincorporacion(): Promise<void> {
+    if (!this.alumnoReincorporar) {
+      return;
+    }
+    if (!this.grupoReincorporacion) {
+      await this.mostrarToast('Selecciona el grupo nuevo del alumno', 'danger');
+      return;
+    }
+    this.procesandoEstatus = true;
+    try {
+      await this.adminService.reincorporarAlumno(this.alumnoReincorporar.matricula, this.grupoReincorporacion);
+      await this.mostrarToast('Alumno reincorporado. Su estatus ahora es activo.', 'success');
+      this.modalReincorporarAbierto = false;
+      await this.cargarDatos();
+    } catch (error) {
+      await this.mostrarToast(error instanceof Error ? error.message : 'Ocurrió un error al reincorporar', 'danger');
+    } finally {
+      this.procesandoEstatus = false;
+    }
+  }
+
   periodoNombre(idPeriodo: string | null | undefined): string {
     if (!idPeriodo) {
       return 'Sin periodo';
@@ -165,13 +267,47 @@ export class AdminAlumnosPage {
     return this.periodos.find((p) => p.id_periodo === idPeriodo)?.ciclo_escolar ?? idPeriodo;
   }
 
+  cicloNombre(idCiclo: string | null | undefined): string {
+    if (!idCiclo) {
+      return 'Sin ciclo escolar';
+    }
+    return this.ciclos.find((c) => c.id_ciclo === idCiclo)?.nombre ?? idCiclo;
+  }
+
+  bloquearTeclaNoNumerica(event: KeyboardEvent): void {
+    const teclasPermitidas = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Home', 'End'];
+    if (teclasPermitidas.includes(event.key) || event.ctrlKey || event.metaKey) {
+      return;
+    }
+    if (!/^\d$/.test(event.key)) {
+      event.preventDefault();
+    }
+  }
+
+  onTelefonoInput(valor: string): void {
+    this.form.telefono = valor.replace(/\D/g, '').slice(0, 10);
+  }
+
   async guardar(): Promise<void> {
-    if (!this.form.nombre || !this.form.apellido_paterno || !this.form.matricula) {
-      await this.mostrarToast('Nombre, apellido paterno y matrícula son requeridos', 'danger');
+    this.form.matricula = this.form.matricula.trim();
+    if (this.form.matricula && !/^[A-Za-z0-9-]+$/.test(this.form.matricula)) {
+      await this.mostrarToast('La matrícula solo puede contener letras, números y guiones, sin espacios', 'danger');
+      return;
+    }
+    if (!this.form.nombre || !this.form.apellido_paterno || !this.form.matricula || !this.form.edad) {
+      await this.mostrarToast('Nombre, apellido paterno, matrícula y edad son requeridos', 'danger');
       return;
     }
     if (!this.modoEdicion && !this.form.password) {
       await this.mostrarToast('La contraseña es requerida para un alumno nuevo', 'danger');
+      return;
+    }
+    if (this.form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.form.email)) {
+      await this.mostrarToast('El correo no tiene un formato válido (ej. usuario@gmail.com)', 'danger');
+      return;
+    }
+    if (this.form.telefono && !/^\d{10}$/.test(this.form.telefono)) {
+      await this.mostrarToast('El teléfono debe tener exactamente 10 dígitos numéricos', 'danger');
       return;
     }
 
@@ -189,6 +325,7 @@ export class AdminAlumnosPage {
           email: this.form.email,
           telefono: this.form.telefono,
           id_periodo: this.form.id_periodo,
+          id_ciclo: this.form.id_ciclo,
           ...(this.form.password ? { password: this.form.password } : {}),
         });
         await this.mostrarToast('Alumno actualizado correctamente', 'success');
@@ -205,8 +342,7 @@ export class AdminAlumnosPage {
     }
   }
 
-  private async mostrarToast(message: string, color: 'success' | 'danger'): Promise<void> {
-    const toast = await this.toastController.create({ message, color, duration: 2500, position: 'bottom' });
-    await toast.present();
+  private async mostrarToast(message: string, color: TipoAlerta): Promise<void> {
+    await this.alertas.mostrar(message, color);
   }
 }

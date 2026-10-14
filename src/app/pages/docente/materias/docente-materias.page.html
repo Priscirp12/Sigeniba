@@ -1,7 +1,27 @@
 <ion-content class="ion-padding docente-shell">
   <div class="page-header">
     <h1>Mis Materias</h1>
-    <ion-searchbar [(ngModel)]="filtroTexto" placeholder="Buscar Materia" showClearButton="always"></ion-searchbar>
+    <ion-searchbar
+      [(ngModel)]="filtroTexto"
+      (ionInput)="aplicarFiltro()"
+      placeholder="Buscar Materia"
+      showClearButton="always"
+    ></ion-searchbar>
+  </div>
+
+  <div class="selectores-semestre">
+    <ion-item>
+      <ion-label position="stacked">Generación</ion-label>
+      <ion-select [(ngModel)]="generacionSeleccionada" (ionChange)="onCambioGeneracion()" interface="popover">
+        <ion-select-option *ngFor="let g of generaciones" [value]="g.id_periodo">{{ g.etiqueta }}</ion-select-option>
+      </ion-select>
+    </ion-item>
+    <ion-item>
+      <ion-label position="stacked">Semestre</ion-label>
+      <ion-select [(ngModel)]="semestreSeleccionado" (ionChange)="onCambioSemestre()" interface="popover">
+        <ion-select-option *ngFor="let s of semestresDisponibles" [value]="s">Semestre {{ s }}</ion-select-option>
+      </ion-select>
+    </ion-item>
   </div>
 
   <div class="table-wrapper">

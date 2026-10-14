@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { IonContent, IonItem, IonLabel, IonSelect, IonSelectOption } from '@ionic/angular/standalone';
+import { IonContent, IonItem, IonLabel, IonSelect, IonSelectOption, ViewWillEnter } from '@ionic/angular/standalone';
 import { AdminService, AlumnoAdmin } from '../../../services/admin.service';
 import { AuthService } from '../../../services/auth.service';
 import { AsignacionDocente, DocenteService } from '../../../services/docente.service';
@@ -12,7 +12,7 @@ import { AsignacionDocente, DocenteService } from '../../../services/docente.ser
   styleUrls: ['./docente-alumnos.page.scss'],
   imports: [CommonModule, FormsModule, IonContent, IonItem, IonLabel, IonSelect, IonSelectOption],
 })
-export class DocenteAlumnosPage {
+export class DocenteAlumnosPage implements ViewWillEnter {
   grupos: { id_grupo: string; nombre: string }[] = [];
   idGrupoSeleccionado: string | null = null;
   alumnos: AlumnoAdmin[] = [];
@@ -23,6 +23,10 @@ export class DocenteAlumnosPage {
     private readonly adminService: AdminService,
     private readonly authService: AuthService,
   ) {
+    this.cargarGrupos();
+  }
+
+  ionViewWillEnter(): void {
     this.cargarGrupos();
   }
 

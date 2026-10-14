@@ -2,6 +2,21 @@
   --background: #f4f7fb;
 }
 
+.selectores-semestre {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.75rem;
+  max-width: 500px;
+  margin-bottom: 1rem;
+}
+
+.selectores-semestre ion-item {
+  --background: #f9fbfd;
+  border-radius: 14px;
+  --padding-start: 0.85rem;
+  --inner-padding-end: 0.85rem;
+}
+
 .page-header {
   display: flex;
   flex-wrap: wrap;

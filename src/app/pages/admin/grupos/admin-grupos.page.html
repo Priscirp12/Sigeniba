@@ -16,6 +16,9 @@
       <ion-segment-button value="materias">
         <ion-label>Materias a docente</ion-label>
       </ion-segment-button>
+      <ion-segment-button value="avanzar">
+        <ion-label>Avanzar de semestre</ion-label>
+      </ion-segment-button>
     </ion-segment>
   </ion-toolbar>
 </ion-header>
@@ -31,6 +34,20 @@
       <ion-label position="stacked">Semestre</ion-label>
       <ion-select [(ngModel)]="semestreGrupo">
         <ion-select-option *ngFor="let s of [1, 2, 3, 4, 5, 6]" [value]="s">Semestre {{ s }}</ion-select-option>
+      </ion-select>
+    </ion-item>
+    <ion-item>
+      <ion-label position="stacked">Periodo escolar</ion-label>
+      <ion-select [(ngModel)]="periodoGrupo" interface="popover">
+        <ion-select-option *ngFor="let periodo of periodos" [value]="periodo.id_periodo">{{ periodo.ciclo_escolar }}</ion-select-option>
+      </ion-select>
+      <ion-note *ngIf="!periodos.length">Aún no hay periodos escolares. Crea uno en "Fechas de captura".</ion-note>
+    </ion-item>
+    <ion-item>
+      <ion-label position="stacked">Ciclo escolar (opcional)</ion-label>
+      <ion-select [(ngModel)]="cicloGrupo" interface="popover">
+        <ion-select-option [value]="null">Sin especificar</ion-select-option>
+        <ion-select-option *ngFor="let ciclo of ciclos" [value]="ciclo.id_ciclo">{{ ciclo.nombre }}</ion-select-option>
       </ion-select>
     </ion-item>
     <ion-item>
@@ -52,7 +69,7 @@
     </div>
     <ion-item *ngFor="let grupo of gruposFiltrados">
       <ion-label>
-        {{ grupo.nombre }} — Semestre {{ grupo.semestre }}
+        {{ grupo.nombre }} — Semestre {{ grupo.semestre }} — {{ periodoNombre(grupo.id_periodo) }}
         <p *ngIf="grupo.tutor_nombre">Tutor: {{ grupo.tutor_nombre }} {{ grupo.tutor_apellido_paterno }}</p>
         <p *ngIf="!grupo.tutor_nombre">Sin tutor asignado</p>
       </ion-label>
@@ -67,7 +84,8 @@
     <p class="aviso-semestre">
       Solo se puede cambiar de grupo a un alumno cuando no tiene ninguna fecha de captura activa hoy (parcial,
       extraordinario o intersemestral), es decir, cuando el semestre no está en curso. Si tiene una ventana de
-      captura abierta, el cambio se omitirá automáticamente.
+      captura abierta, el cambio se omitirá automáticamente. Los alumnos en baja temporal no aparecen aquí: se les
+      asigna grupo al reincorporarlos desde "Gestión de Alumnos".
     </p>
 
     <div class="filtros">
@@ -231,6 +249,43 @@
       <ion-item *ngIf="!asignacionesDocente.length">
         <ion-label class="empty">Este docente no tiene materias asignadas.</ion-label>
       </ion-item>
+    </ng-container>
+  </div>
+
+  <!-- Avanzar de semestre -->
+  <div *ngIf="segmento === 'avanzar'">
+    <p class="aviso-semestre">
+      Mueve a todos los alumnos de un grupo al siguiente semestre de un solo paso (ej. de "1A" a "2A"). Se
+      crea el grupo destino si no existe. Igual que en "Asignar alumnos", solo se mueven los alumnos que no
+      tengan una ventana de captura activa hoy. La asignación de materias y docentes del nuevo semestre se
+      hace aparte, en "Materias a docente".
+    </p>
+
+    <ion-item>
+      <ion-label position="stacked">Grupo origen</ion-label>
+      <ion-select [(ngModel)]="grupoOrigenAvanzar" (ionChange)="onCambioGrupoOrigenAvanzar()" interface="popover">
+        <ion-select-option *ngFor="let grupo of grupos" [value]="grupo.id_grupo">
+          {{ grupo.nombre }} — Semestre {{ grupo.semestre }} — {{ periodoNombre(grupo.id_periodo) }}
+        </ion-select-option>
+      </ion-select>
+    </ion-item>
+
+    <ng-container *ngIf="grupoOrigenAvanzar">
+      <ion-item>
+        <ion-label position="stacked">Nombre del grupo destino</ion-label>
+        <ion-input [(ngModel)]="nombreGrupoDestinoAvanzar" placeholder="Ej. 2A"></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-label position="stacked">Ciclo escolar destino (opcional)</ion-label>
+        <ion-select [(ngModel)]="cicloDestinoAvanzar" interface="popover">
+          <ion-select-option [value]="null">Sin especificar</ion-select-option>
+          <ion-select-option *ngFor="let ciclo of ciclos" [value]="ciclo.id_ciclo">{{ ciclo.nombre }}</ion-select-option>
+        </ion-select>
+        <ion-note *ngIf="!ciclos.length">Aún no hay ciclos escolares. Crea uno en "Fechas de captura".</ion-note>
+      </ion-item>
+      <div class="actions">
+        <ion-button [disabled]="avanzandoSemestre" (click)="avanzarSemestre()">Avanzar alumnos</ion-button>
+      </div>
     </ng-container>
   </div>
 </ion-content>

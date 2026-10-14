@@ -23,41 +23,44 @@ if (!$alumno) {
     send_error('Alumno no encontrado', 404);
 }
 
-$stmt = $pdo->prepare('SELECT asa.id_periodo, p.fecha_inicio, p.fecha_fin,
+// Un "periodo" es una generación completa (varios años, varios semestres), así
+// que el historial se agrupa por (periodo + semestre del grupo) — no solo por
+// periodo — para no mezclar en un mismo bloque materias de semestres distintos.
+$stmt = $pdo->prepare('SELECT asa.id_periodo, g.semestre,
                                m.id_materia, m.nombre AS materia_nombre,
                                c.tipo, cc.valor
                         FROM calificaciones_criterios cc
                         JOIN criterios_evaluacion c ON c.id_criterio = cc.id_criterio
                         JOIN asignaciones_academicas asa ON asa.id_asignacion = c.id_asignacion
                         JOIN materias m ON m.id_materia = asa.id_materia
-                        JOIN periodos_escolares p ON p.id_periodo = asa.id_periodo
+                        JOIN grupos g ON g.id_grupo = asa.id_grupo
                         WHERE cc.matricula = ?
-                        ORDER BY p.fecha_inicio, m.nombre');
+                        ORDER BY g.semestre, m.nombre');
 $stmt->execute([$matricula]);
 $filas = $stmt->fetchAll();
 
-// Agrupar: periodo -> materia -> tipo -> suma de puntos obtenidos
+// Agrupar: (periodo+semestre) -> materia -> tipo -> suma de puntos obtenidos
 $estructura = [];
 foreach ($filas as $fila) {
-    $idPeriodo = $fila['id_periodo'];
+    $semestre = (int) $fila['semestre'];
+    $claveGrupo = $fila['id_periodo'] . '|' . $semestre;
     $idMateria = $fila['id_materia'];
     $tipo = $fila['tipo'];
 
-    if (!isset($estructura[$idPeriodo])) {
-        $estructura[$idPeriodo] = [
-            'fecha_inicio' => $fila['fecha_inicio'],
-            'fecha_fin' => $fila['fecha_fin'],
+    if (!isset($estructura[$claveGrupo])) {
+        $estructura[$claveGrupo] = [
+            'semestre' => $semestre,
             'materias' => [],
         ];
     }
-    if (!isset($estructura[$idPeriodo]['materias'][$idMateria])) {
-        $estructura[$idPeriodo]['materias'][$idMateria] = [
+    if (!isset($estructura[$claveGrupo]['materias'][$idMateria])) {
+        $estructura[$claveGrupo]['materias'][$idMateria] = [
             'nombre' => $fila['materia_nombre'],
             'tipos' => [],
         ];
     }
-    $actual = $estructura[$idPeriodo]['materias'][$idMateria]['tipos'][$tipo] ?? 0;
-    $estructura[$idPeriodo]['materias'][$idMateria]['tipos'][$tipo] = $actual + (float) $fila['valor'];
+    $actual = $estructura[$claveGrupo]['materias'][$idMateria]['tipos'][$tipo] ?? 0;
+    $estructura[$claveGrupo]['materias'][$idMateria]['tipos'][$tipo] = $actual + (float) $fila['valor'];
 }
 
 $meses = [
@@ -66,27 +69,15 @@ $meses = [
     '09' => 'Septiembre', '10' => 'Octubre', '11' => 'Noviembre', '12' => 'Diciembre',
 ];
 
-function formatear_semestre(string $fechaInicio, string $fechaFin, array $meses): string
-{
-    [$anioIni, $mesIni] = explode('-', $fechaInicio);
-    [$anioFin, $mesFin] = explode('-', $fechaFin);
-
-    if ($anioIni === $anioFin) {
-        return $meses[$mesIni] . ' - ' . $meses[$mesFin] . ' ' . $anioFin;
-    }
-
-    return $meses[$mesIni] . ' ' . $anioIni . ' - ' . $meses[$mesFin] . ' ' . $anioFin;
-}
-
-// Ordenar periodos por fecha de inicio
+// Ordenar por número de semestre
 uasort($estructura, function ($a, $b) {
-    return strcmp($a['fecha_inicio'], $b['fecha_inicio']);
+    return $a['semestre'] <=> $b['semestre'];
 });
 
 $semestres = [];
 $todasLasCalificaciones = [];
 
-foreach ($estructura as $idPeriodo => $datosPeriodo) {
+foreach ($estructura as $claveGrupo => $datosPeriodo) {
     $materiasSalida = [];
     $sumaSemestre = 0;
     $contadorSemestre = 0;
@@ -94,27 +85,53 @@ foreach ($estructura as $idPeriodo => $datosPeriodo) {
     foreach ($datosPeriodo['materias'] as $materia) {
         $tipos = $materia['tipos'];
 
-        if (isset($tipos['intersemestral'])) {
-            $calificacion = round($tipos['intersemestral'], 2);
-        } elseif (isset($tipos['extraordinario'])) {
-            $calificacion = round($tipos['extraordinario'], 2);
-        } else {
-            $parciales = [];
-            foreach (['parcial1', 'parcial2', 'parcial3'] as $tipoParcial) {
-                if (isset($tipos[$tipoParcial])) {
-                    $parciales[] = $tipos[$tipoParcial];
-                }
+        // Calificación regular: promedio de los parciales capturados (puede no existir
+        // si el alumno pasó directo a extraordinario/intersemestral sin parciales).
+        $calificacionRegular = null;
+        $parciales = [];
+        foreach (['parcial1', 'parcial2', 'parcial3'] as $tipoParcial) {
+            if (isset($tipos[$tipoParcial])) {
+                $parciales[] = $tipos[$tipoParcial];
             }
-            if (!$parciales) {
-                continue;
-            }
-            $calificacion = round(array_sum($parciales) / count($parciales), 2);
+        }
+        if ($parciales) {
+            $calificacionRegular = round(array_sum($parciales) / count($parciales), 2);
         }
 
-        $materiasSalida[] = ['nombre' => $materia['nombre'], 'calificacion' => $calificacion];
-        $sumaSemestre += $calificacion;
+        // Si el alumno reprueba en parciales, se le aplica extraordinario; si también
+        // reprueba el extraordinario, se le aplica intersemestral. Cada etapa se guarda
+        // por separado (nunca se mezclan ni se reemplazan entre sí en el historial).
+        $calificacionExtraordinario = isset($tipos['extraordinario']) ? round($tipos['extraordinario'], 2) : null;
+        $calificacionIntersemestral = isset($tipos['intersemestral']) ? round($tipos['intersemestral'], 2) : null;
+
+        if ($calificacionRegular === null && $calificacionExtraordinario === null && $calificacionIntersemestral === null) {
+            continue;
+        }
+
+        // La calificación que finalmente cuenta para el promedio es la de la última
+        // etapa que el alumno haya presentado (intersemestral > extraordinario > regular).
+        if ($calificacionIntersemestral !== null) {
+            $calificacionFinal = $calificacionIntersemestral;
+            $origenCalificacion = 'intersemestral';
+        } elseif ($calificacionExtraordinario !== null) {
+            $calificacionFinal = $calificacionExtraordinario;
+            $origenCalificacion = 'extraordinario';
+        } else {
+            $calificacionFinal = $calificacionRegular;
+            $origenCalificacion = 'regular';
+        }
+
+        $materiasSalida[] = [
+            'nombre' => $materia['nombre'],
+            'calificacion' => $calificacionFinal,
+            'origen_calificacion' => $origenCalificacion,
+            'calificacion_regular' => $calificacionRegular,
+            'calificacion_extraordinario' => $calificacionExtraordinario,
+            'calificacion_intersemestral' => $calificacionIntersemestral,
+        ];
+        $sumaSemestre += $calificacionFinal;
         $contadorSemestre++;
-        $todasLasCalificaciones[] = $calificacion;
+        $todasLasCalificaciones[] = $calificacionFinal;
     }
 
     if (!$materiasSalida) {
@@ -122,8 +139,8 @@ foreach ($estructura as $idPeriodo => $datosPeriodo) {
     }
 
     $semestres[] = [
-        'id_periodo' => $idPeriodo,
-        'etiqueta' => formatear_semestre($datosPeriodo['fecha_inicio'], $datosPeriodo['fecha_fin'], $meses),
+        'semestre' => $datosPeriodo['semestre'],
+        'etiqueta' => 'Semestre ' . $datosPeriodo['semestre'],
         'materias' => $materiasSalida,
         'promedio_semestre' => round($sumaSemestre / $contadorSemestre, 2),
     ];

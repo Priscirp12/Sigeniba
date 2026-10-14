@@ -95,7 +95,14 @@
           </ion-item>
           <ion-item>
             <ion-label position="stacked">Teléfono</ion-label>
-            <ion-input [(ngModel)]="form.telefono"></ion-input>
+            <ion-input
+              type="tel"
+              inputmode="numeric"
+              maxlength="10"
+              [value]="form.telefono"
+              (keydown)="bloquearTeclaNoNumerica($event)"
+              (ionInput)="onTelefonoInput($any($event.detail.value) ?? '')"
+            ></ion-input>
           </ion-item>
           <ion-item>
             <ion-label position="stacked">{{ modoEdicion ? 'Nueva contraseña (opcional)' : 'Contraseña' }}</ion-label>

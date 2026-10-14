@@ -15,7 +15,7 @@ import {
   IonSegmentButton,
   IonSelect,
   IonSelectOption,
-  ToastController,
+  ViewWillEnter,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { trashOutline } from 'ionicons/icons';
@@ -27,6 +27,7 @@ import {
   FilaCalificacionAlumno,
   TipoEvaluacion,
 } from '../../../services/docente.service';
+import { AlertaService, TipoAlerta } from '../../../services/alerta.service';
 
 type FiltroEstado = 'todos' | 'aprobados' | 'reprobados' | 'capturada' | 'no_capturada';
 
@@ -61,12 +62,19 @@ const CALIFICACION_APROBATORIA = 6;
     IonSelectOption,
   ],
 })
-export class DocenteCalificacionesPage {
+export class DocenteCalificacionesPage implements ViewWillEnter {
   tipos = TIPOS;
   asignaciones: AsignacionDocente[] = [];
   idAsignacionSeleccionada: string | null = null;
   tipoSeleccionado: TipoEvaluacion = 'parcial1';
   idCriterioSeleccionado: string | null = null;
+
+  // Un docente puede dar clases en varios semestres/generaciones a la vez;
+  // este selector evita que se mezclen todas sus asignaciones en una sola lista.
+  generaciones: { id_periodo: string; etiqueta: string }[] = [];
+  generacionSeleccionada: string | null = null;
+  semestresDisponibles: number[] = [];
+  semestreSeleccionado: number | null = null;
 
   respuesta: CalificacionesResponse | null = null;
   cargando = false;
@@ -77,12 +85,62 @@ export class DocenteCalificacionesPage {
   constructor(
     private readonly docenteService: DocenteService,
     private readonly authService: AuthService,
-    private readonly toastController: ToastController,
+    private readonly alertas: AlertaService,
     private readonly alertController: AlertController,
     private readonly route: ActivatedRoute,
   ) {
     addIcons({ trashOutline });
     this.inicializar();
+  }
+
+  ionViewWillEnter(): void {
+    this.inicializar();
+  }
+
+  get asignacionesFiltradas(): AsignacionDocente[] {
+    return this.asignaciones.filter(
+      (a) => a.id_periodo === this.generacionSeleccionada && a.semestre === this.semestreSeleccionado,
+    );
+  }
+
+  private actualizarGeneracionesYSemestre(asignacionPreferida: AsignacionDocente | null): void {
+    const mapa = new Map<string, string>();
+    for (const a of this.asignaciones) {
+      mapa.set(a.id_periodo, a.ciclo_escolar);
+    }
+    this.generaciones = Array.from(mapa.entries()).map(([id_periodo, etiqueta]) => ({ id_periodo, etiqueta }));
+
+    // Si llegamos con una asignación preferida (ej. desde "Mis Grupos"), la
+    // generación/semestre se ajustan para que quede visible, no se pierde.
+    this.generacionSeleccionada = asignacionPreferida?.id_periodo ?? this.generaciones[0]?.id_periodo ?? null;
+    this.actualizarSemestresDisponibles(asignacionPreferida?.semestre ?? null);
+  }
+
+  private actualizarSemestresDisponibles(semestrePreferido: number | null): void {
+    const semestres = new Set(
+      this.asignaciones.filter((a) => a.id_periodo === this.generacionSeleccionada).map((a) => a.semestre),
+    );
+    this.semestresDisponibles = Array.from(semestres).sort((a, b) => a - b);
+    this.semestreSeleccionado =
+      semestrePreferido !== null && this.semestresDisponibles.includes(semestrePreferido)
+        ? semestrePreferido
+        : this.semestresDisponibles[0] ?? null;
+  }
+
+  async onCambioGeneracion(): Promise<void> {
+    this.semestreSeleccionado = null;
+    this.actualizarSemestresDisponibles(null);
+    await this.onCambioSemestreFiltro();
+  }
+
+  async onCambioSemestreFiltro(): Promise<void> {
+    this.idAsignacionSeleccionada = this.asignacionesFiltradas[0]?.id_asignacion ?? null;
+    this.idCriterioSeleccionado = null;
+    if (this.idAsignacionSeleccionada) {
+      await this.cargarCalificaciones();
+    } else {
+      this.respuesta = null;
+    }
   }
 
   async inicializar(): Promise<void> {
@@ -93,11 +151,10 @@ export class DocenteCalificacionesPage {
     this.asignaciones = await this.docenteService.getMisAsignaciones(idDocente);
 
     const idDesdeQuery = this.route.snapshot.queryParamMap.get('id_asignacion');
-    if (idDesdeQuery && this.asignaciones.some((a) => a.id_asignacion === idDesdeQuery)) {
-      this.idAsignacionSeleccionada = idDesdeQuery;
-    } else if (this.asignaciones.length) {
-      this.idAsignacionSeleccionada = this.asignaciones[0].id_asignacion;
-    }
+    const asignacionDesdeQuery = idDesdeQuery ? this.asignaciones.find((a) => a.id_asignacion === idDesdeQuery) ?? null : null;
+
+    this.actualizarGeneracionesYSemestre(asignacionDesdeQuery);
+    this.idAsignacionSeleccionada = asignacionDesdeQuery?.id_asignacion ?? this.asignacionesFiltradas[0]?.id_asignacion ?? null;
 
     if (this.idAsignacionSeleccionada) {
       await this.cargarCalificaciones();
@@ -190,6 +247,7 @@ export class DocenteCalificacionesPage {
     try {
       await this.docenteService.guardarCalificacion(matricula, actividad.id_criterio, valor);
       await this.cargarCalificaciones();
+      await this.mostrarToast(`Calificación de ${matricula} guardada correctamente`, 'success');
     } catch (error) {
       await this.mostrarToast(error instanceof Error ? error.message : 'Ocurrió un error al guardar', 'danger');
       await this.cargarCalificaciones();
@@ -224,8 +282,7 @@ export class DocenteCalificacionesPage {
     await alert.present();
   }
 
-  private async mostrarToast(message: string, color: 'success' | 'danger'): Promise<void> {
-    const toast = await this.toastController.create({ message, color, duration: 2500, position: 'bottom' });
-    await toast.present();
+  private async mostrarToast(message: string, color: TipoAlerta): Promise<void> {
+    await this.alertas.mostrar(message, color);
   }
 }

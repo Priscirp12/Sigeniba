@@ -80,6 +80,31 @@ td {
   width: 120px;
 }
 
+.desglose-recuperacion {
+  margin-top: 0.3rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.desglose-recuperacion .etapa {
+  font-size: 0.72rem;
+  font-style: italic;
+  color: #92400e;
+  background: #fef3c7;
+  border-radius: 999px;
+  padding: 0.1rem 0.5rem;
+}
+
+.tag-origen {
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 700;
+  font-style: normal;
+  color: #92400e;
+  margin-top: 0.15rem;
+}
+
 .fila-promedio td {
   font-weight: 700;
   border-top: 2px solid #334155;

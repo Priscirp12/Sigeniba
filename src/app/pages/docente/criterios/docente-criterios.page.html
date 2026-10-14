@@ -5,9 +5,21 @@
 
   <div class="selectores">
     <ion-item>
+      <ion-label position="stacked">Generación</ion-label>
+      <ion-select [(ngModel)]="generacionSeleccionada" (ionChange)="onCambioGeneracion()" interface="popover">
+        <ion-select-option *ngFor="let g of generaciones" [value]="g.id_periodo">{{ g.etiqueta }}</ion-select-option>
+      </ion-select>
+    </ion-item>
+    <ion-item>
+      <ion-label position="stacked">Semestre</ion-label>
+      <ion-select [(ngModel)]="semestreSeleccionado" (ionChange)="onCambioSemestreFiltro()" interface="popover">
+        <ion-select-option *ngFor="let s of semestresDisponibles" [value]="s">Semestre {{ s }}</ion-select-option>
+      </ion-select>
+    </ion-item>
+    <ion-item>
       <ion-label position="stacked">Materia / Grupo</ion-label>
       <ion-select [(ngModel)]="idAsignacionSeleccionada" (ionChange)="onCambioAsignacion()">
-        <ion-select-option *ngFor="let a of asignaciones" [value]="a.id_asignacion">
+        <ion-select-option *ngFor="let a of asignacionesFiltradas" [value]="a.id_asignacion">
           {{ a.materia_nombre }} — {{ a.grupo_nombre }}
         </ion-select-option>
       </ion-select>

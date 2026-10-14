@@ -15,11 +15,12 @@ import {
   IonSelectOption,
   IonTitle,
   IonToolbar,
-  ToastController,
+  ViewWillEnter,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { addOutline, calendarOutline } from 'ionicons/icons';
-import { AdminService, PeriodoEscolar, TipoVentanaCaptura } from '../../../services/admin.service';
+import { AdminService, CicloEscolar, PeriodoEscolar, TipoVentanaCaptura } from '../../../services/admin.service';
+import { AlertaService, TipoAlerta } from '../../../services/alerta.service';
 
 interface FilaVentana {
   tipo: TipoVentanaCaptura;
@@ -55,9 +56,11 @@ const TIPOS: { tipo: TipoVentanaCaptura; etiqueta: string }[] = [
     IonSelectOption,
   ],
 })
-export class AdminFechasPage {
+export class AdminFechasPage implements ViewWillEnter {
   periodos: PeriodoEscolar[] = [];
   periodoSeleccionado: string | null = null;
+  semestres = [1, 2, 3, 4, 5, 6];
+  semestreSeleccionado = 1;
 
   mostrarNuevoPeriodo = false;
   nuevoCicloEscolar = '';
@@ -65,14 +68,57 @@ export class AdminFechasPage {
   nuevaFechaFin = '';
   creandoPeriodo = false;
 
+  ciclos: CicloEscolar[] = [];
+  mostrarNuevoCiclo = false;
+  nuevoNombreCiclo = '';
+  nuevoCicloFechaInicio = '';
+  nuevoCicloFechaFin = '';
+  creandoCiclo = false;
+
   filas: FilaVentana[] = TIPOS.map((t) => ({ tipo: t.tipo, etiqueta: t.etiqueta, fecha_inicio: '', fecha_fin: '', guardando: false }));
 
   constructor(
     private readonly adminService: AdminService,
-    private readonly toastController: ToastController,
+    private readonly alertas: AlertaService,
   ) {
     addIcons({ addOutline, calendarOutline });
     this.cargarPeriodos();
+    this.cargarCiclos();
+  }
+
+  ionViewWillEnter(): void {
+    this.cargarPeriodos();
+    this.cargarCiclos();
+  }
+
+  async cargarCiclos(): Promise<void> {
+    this.ciclos = await this.adminService.getCiclosEscolares();
+  }
+
+  async crearCiclo(): Promise<void> {
+    if (!this.nuevoNombreCiclo || !this.nuevoCicloFechaInicio || !this.nuevoCicloFechaFin) {
+      await this.mostrarToast('Nombre y ambas fechas del ciclo escolar son requeridos', 'danger');
+      return;
+    }
+
+    this.creandoCiclo = true;
+    try {
+      await this.adminService.crearCicloEscolar({
+        nombre: this.nuevoNombreCiclo,
+        fecha_inicio: this.nuevoCicloFechaInicio,
+        fecha_fin: this.nuevoCicloFechaFin,
+      });
+      await this.mostrarToast('Ciclo escolar creado correctamente', 'success');
+      this.nuevoNombreCiclo = '';
+      this.nuevoCicloFechaInicio = '';
+      this.nuevoCicloFechaFin = '';
+      this.mostrarNuevoCiclo = false;
+      await this.cargarCiclos();
+    } catch (error) {
+      await this.mostrarToast(error instanceof Error ? error.message : 'Ocurrió un error al crear el ciclo escolar', 'danger');
+    } finally {
+      this.creandoCiclo = false;
+    }
   }
 
   async cargarPeriodos(): Promise<void> {
@@ -87,11 +133,15 @@ export class AdminFechasPage {
     await this.cargarVentanas();
   }
 
+  async onSemestreChange(): Promise<void> {
+    await this.cargarVentanas();
+  }
+
   async cargarVentanas(): Promise<void> {
     if (!this.periodoSeleccionado) {
       return;
     }
-    const ventanas = await this.adminService.getVentanasCaptura(this.periodoSeleccionado);
+    const ventanas = await this.adminService.getVentanasCaptura(this.periodoSeleccionado, this.semestreSeleccionado);
     this.filas = TIPOS.map((t) => {
       const existente = ventanas.find((v) => v.tipo === t.tipo);
       return {
@@ -114,6 +164,7 @@ export class AdminFechasPage {
     try {
       await this.adminService.guardarVentanaCaptura({
         id_periodo: this.periodoSeleccionado,
+        semestre: this.semestreSeleccionado,
         tipo: fila.tipo,
         fecha_inicio: fila.fecha_inicio,
         fecha_fin: fila.fecha_fin,
@@ -154,8 +205,7 @@ export class AdminFechasPage {
     }
   }
 
-  private async mostrarToast(message: string, color: 'success' | 'danger'): Promise<void> {
-    const toast = await this.toastController.create({ message, color, duration: 2500, position: 'bottom' });
-    await toast.present();
+  private async mostrarToast(message: string, color: TipoAlerta): Promise<void> {
+    await this.alertas.mostrar(message, color);
   }
 }

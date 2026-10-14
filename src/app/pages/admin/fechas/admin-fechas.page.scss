@@ -18,6 +18,24 @@
   font-weight: 800;
 }
 
+.page-header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.ayuda {
+  color: #64748b;
+  font-size: 0.85rem;
+  margin: 0 0.25rem 0.75rem;
+}
+
+.selectores {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.75rem;
+}
+
 ion-item {
   --background: #f9fbfd;
   border-radius: 14px;

@@ -3,6 +3,7 @@ import { Component } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import {
   IonButton,
+  IonButtons,
   IonContent,
   IonHeader,
   IonIcon,
@@ -23,10 +24,12 @@ import {
   clipboardOutline,
   keyOutline,
   logOutOutline,
+  menuOutline,
   peopleOutline,
   personCircleOutline,
 } from 'ionicons/icons';
 import { AuthService } from '../../services/auth.service';
+import { MenuLateralService } from '../../services/menu-lateral.service';
 
 type GrupoMenu = 'materias' | 'grupos' | 'criterios' | 'calificaciones' | 'alumnos';
 
@@ -50,6 +53,7 @@ type GrupoMenu = 'materias' | 'grupos' | 'criterios' | 'calificaciones' | 'alumn
     IonLabel,
     IonIcon,
     IonButton,
+    IonButtons,
   ],
 })
 export class DocenteShellPage {
@@ -64,6 +68,7 @@ export class DocenteShellPage {
   constructor(
     private readonly authService: AuthService,
     private readonly router: Router,
+    readonly menuLateral: MenuLateralService,
   ) {
     addIcons({
       peopleOutline,
@@ -73,6 +78,7 @@ export class DocenteShellPage {
       keyOutline,
       personCircleOutline,
       logOutOutline,
+      menuOutline,
       chevronDownOutline,
     });
   }
@@ -83,6 +89,14 @@ export class DocenteShellPage {
 
   toggleGrupo(grupo: GrupoMenu): void {
     this.openGroups[grupo] = !this.openGroups[grupo];
+  }
+
+  irAlInicio(): void {
+    this.router.navigateByUrl('/docente');
+  }
+
+  async alternarMenu(): Promise<void> {
+    await this.menuLateral.alternar('docente-menu');
   }
 
   cerrarSesion(): void {

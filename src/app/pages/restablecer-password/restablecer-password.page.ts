@@ -2,10 +2,11 @@ import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { IonButton, IonCard, IonCardContent, IonContent, IonIcon, IonInput, IonItem, IonList, IonText, ToastController } from '@ionic/angular/standalone';
+import { IonButton, IonCard, IonCardContent, IonContent, IonIcon, IonInput, IonItem, IonList, IonText } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { eyeOffOutline, eyeOutline, lockClosedOutline } from 'ionicons/icons';
 import { PasswordRecoveryService } from '../../services/password-recovery.service';
+import { AlertaService, TipoAlerta } from '../../services/alerta.service';
 
 @Component({
   selector: 'app-restablecer-password',
@@ -39,7 +40,7 @@ export class RestablecerPasswordPage {
     private readonly recoveryService: PasswordRecoveryService,
     private readonly route: ActivatedRoute,
     private readonly router: Router,
-    private readonly toastController: ToastController,
+    private readonly alertas: AlertaService,
   ) {
     addIcons({ eyeOutline, eyeOffOutline, lockClosedOutline });
     this.token = this.route.snapshot.queryParamMap.get('token') ?? '';
@@ -67,8 +68,7 @@ export class RestablecerPasswordPage {
     }
   }
 
-  private async mostrarToast(message: string, color: 'success' | 'danger'): Promise<void> {
-    const toast = await this.toastController.create({ message, color, duration: 3500, position: 'bottom' });
-    await toast.present();
+  private async mostrarToast(message: string, color: TipoAlerta): Promise<void> {
+    await this.alertas.mostrar(message, color);
   }
 }

@@ -17,11 +17,12 @@ import {
   IonSelectOption,
   IonTitle,
   IonToolbar,
-  ToastController,
+  ViewWillEnter,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { addOutline, createOutline } from 'ionicons/icons';
 import { AdminService, MateriaAdmin } from '../../../services/admin.service';
+import { AlertaService, TipoAlerta } from '../../../services/alerta.service';
 
 @Component({
   selector: 'app-admin-materias',
@@ -47,7 +48,7 @@ import { AdminService, MateriaAdmin } from '../../../services/admin.service';
     IonSelectOption,
   ],
 })
-export class AdminMateriasPage {
+export class AdminMateriasPage implements ViewWillEnter {
   materias: MateriaAdmin[] = [];
   cargando = false;
   guardando = false;
@@ -62,9 +63,13 @@ export class AdminMateriasPage {
 
   constructor(
     private readonly adminService: AdminService,
-    private readonly toastController: ToastController,
+    private readonly alertas: AlertaService,
   ) {
     addIcons({ addOutline, createOutline });
+    this.cargarDatos();
+  }
+
+  ionViewWillEnter(): void {
     this.cargarDatos();
   }
 
@@ -144,8 +149,7 @@ export class AdminMateriasPage {
     }
   }
 
-  private async mostrarToast(message: string, color: 'success' | 'danger'): Promise<void> {
-    const toast = await this.toastController.create({ message, color, duration: 2500, position: 'bottom' });
-    await toast.present();
+  private async mostrarToast(message: string, color: TipoAlerta): Promise<void> {
+    await this.alertas.mostrar(message, color);
   }
 }

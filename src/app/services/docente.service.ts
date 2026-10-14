@@ -36,6 +36,7 @@ export interface VentanaEstado {
 export interface FilaCalificacionAlumno {
   alumno: {
     matricula: string;
+    estatus: 'activo' | 'inactivo';
     nombre: string;
     apellido_paterno: string;
     apellido_materno: string | null;

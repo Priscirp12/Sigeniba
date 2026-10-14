@@ -1,6 +1,14 @@
 import { Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { IonCard, IonCardContent, IonCardHeader, IonCardTitle, IonContent, IonIcon } from '@ionic/angular/standalone';
+import {
+  IonCard,
+  IonCardContent,
+  IonCardHeader,
+  IonCardTitle,
+  IonContent,
+  IonIcon,
+  ViewWillEnter,
+} from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { bookOutline, peopleOutline } from 'ionicons/icons';
 import { AuthService } from '../../services/auth.service';
@@ -12,7 +20,7 @@ import { DocenteService } from '../../services/docente.service';
   styleUrls: ['./docente.page.scss'],
   imports: [RouterLink, IonContent, IonCard, IonCardHeader, IonCardTitle, IonCardContent, IonIcon],
 })
-export class DocentePage {
+export class DocentePage implements ViewWillEnter {
   totalMaterias = 0;
   totalGrupos = 0;
 
@@ -21,6 +29,10 @@ export class DocentePage {
     private readonly authService: AuthService,
   ) {
     addIcons({ bookOutline, peopleOutline });
+    this.cargarResumen();
+  }
+
+  ionViewWillEnter(): void {
     this.cargarResumen();
   }
 

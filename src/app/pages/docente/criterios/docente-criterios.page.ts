@@ -12,12 +12,13 @@ import {
   IonSegmentButton,
   IonSelect,
   IonSelectOption,
-  ToastController,
+  ViewWillEnter,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { addOutline, lockClosedOutline, saveOutline, trashOutline } from 'ionicons/icons';
 import { AuthService } from '../../../services/auth.service';
 import { AsignacionDocente, CriterioEvaluacion, DocenteService } from '../../../services/docente.service';
+import { AlertaService, TipoAlerta } from '../../../services/alerta.service';
 
 type TipoParcial = 'parcial1' | 'parcial2' | 'parcial3';
 type TipoEspecial = 'extraordinario' | 'intersemestral';
@@ -60,9 +61,16 @@ const ESPECIALES: { tipo: TipoEspecial; etiqueta: string }[] = [
     IonSelectOption,
   ],
 })
-export class DocenteCriteriosPage {
+export class DocenteCriteriosPage implements ViewWillEnter {
   asignaciones: AsignacionDocente[] = [];
   idAsignacionSeleccionada: string | null = null;
+
+  // Un docente puede dar clases en varios semestres/generaciones a la vez;
+  // este selector evita que se mezclen todas sus asignaciones en una sola lista.
+  generaciones: { id_periodo: string; etiqueta: string }[] = [];
+  generacionSeleccionada: string | null = null;
+  semestresDisponibles: number[] = [];
+  semestreSeleccionado: number | null = null;
 
   modo: Modo = 'regulares';
   cargando = false;
@@ -88,10 +96,55 @@ export class DocenteCriteriosPage {
   constructor(
     private readonly docenteService: DocenteService,
     private readonly authService: AuthService,
-    private readonly toastController: ToastController,
+    private readonly alertas: AlertaService,
   ) {
     addIcons({ addOutline, saveOutline, trashOutline, lockClosedOutline });
     this.cargarAsignaciones();
+  }
+
+  ionViewWillEnter(): void {
+    this.cargarAsignaciones();
+  }
+
+  get asignacionesFiltradas(): AsignacionDocente[] {
+    return this.asignaciones.filter(
+      (a) => a.id_periodo === this.generacionSeleccionada && a.semestre === this.semestreSeleccionado,
+    );
+  }
+
+  private actualizarGeneracionesYSemestre(): void {
+    const mapa = new Map<string, string>();
+    for (const a of this.asignaciones) {
+      mapa.set(a.id_periodo, a.ciclo_escolar);
+    }
+    this.generaciones = Array.from(mapa.entries()).map(([id_periodo, etiqueta]) => ({ id_periodo, etiqueta }));
+    if (!this.generacionSeleccionada || !mapa.has(this.generacionSeleccionada)) {
+      this.generacionSeleccionada = this.generaciones[0]?.id_periodo ?? null;
+    }
+    this.actualizarSemestresDisponibles();
+  }
+
+  private actualizarSemestresDisponibles(): void {
+    const semestres = new Set(
+      this.asignaciones.filter((a) => a.id_periodo === this.generacionSeleccionada).map((a) => a.semestre),
+    );
+    this.semestresDisponibles = Array.from(semestres).sort((a, b) => a - b);
+    if (this.semestreSeleccionado === null || !this.semestresDisponibles.includes(this.semestreSeleccionado)) {
+      this.semestreSeleccionado = this.semestresDisponibles[0] ?? null;
+    }
+  }
+
+  async onCambioGeneracion(): Promise<void> {
+    this.semestreSeleccionado = null;
+    this.actualizarSemestresDisponibles();
+    await this.onCambioSemestreFiltro();
+  }
+
+  async onCambioSemestreFiltro(): Promise<void> {
+    this.idAsignacionSeleccionada = this.asignacionesFiltradas[0]?.id_asignacion ?? null;
+    if (this.idAsignacionSeleccionada) {
+      await this.cargarTodo();
+    }
   }
 
   async cargarAsignaciones(): Promise<void> {
@@ -100,8 +153,9 @@ export class DocenteCriteriosPage {
       return;
     }
     this.asignaciones = await this.docenteService.getMisAsignaciones(idDocente);
-    if (this.asignaciones.length) {
-      this.idAsignacionSeleccionada = this.asignaciones[0].id_asignacion;
+    this.actualizarGeneracionesYSemestre();
+    if (this.asignacionesFiltradas.length) {
+      this.idAsignacionSeleccionada = this.asignacionesFiltradas[0].id_asignacion;
       await this.cargarTodo();
     }
   }
@@ -285,8 +339,7 @@ export class DocenteCriteriosPage {
     }
   }
 
-  private async mostrarToast(message: string, color: 'success' | 'danger'): Promise<void> {
-    const toast = await this.toastController.create({ message, color, duration: 2500, position: 'bottom' });
-    await toast.present();
+  private async mostrarToast(message: string, color: TipoAlerta): Promise<void> {
+    await this.alertas.mostrar(message, color);
   }
 }

@@ -13,7 +13,10 @@ if ($method === 'GET') {
         send_error('id_asignacion y un tipo válido son requeridos');
     }
 
-    $stmt = $pdo->prepare('SELECT id_grupo, id_periodo FROM asignaciones_academicas WHERE id_asignacion = ?');
+    $stmt = $pdo->prepare('SELECT a.id_grupo, a.id_periodo, g.semestre
+                            FROM asignaciones_academicas a
+                            JOIN grupos g ON g.id_grupo = a.id_grupo
+                            WHERE a.id_asignacion = ?');
     $stmt->execute([$idAsignacion]);
     $asignacion = $stmt->fetch();
 
@@ -29,10 +32,10 @@ if ($method === 'GET') {
     $criterios = $stmt->fetchAll();
 
     $sumaCriterios = round(array_sum(array_column($criterios, 'valor_puntos')), 2);
-    $ventana = ventana_captura_estado($pdo, $asignacion['id_periodo'], $tipo);
+    $ventana = ventana_captura_estado($pdo, $asignacion['id_periodo'], (int) $asignacion['semestre'], $tipo);
     $editable = $ventana['abierta'] && count($criterios) > 0 && abs($sumaCriterios - 10) < 0.01;
 
-    $stmt = $pdo->prepare('SELECT a.matricula, u.nombre, u.apellido_paterno, u.apellido_materno
+    $stmt = $pdo->prepare('SELECT a.matricula, a.estatus, u.nombre, u.apellido_paterno, u.apellido_materno
                             FROM alumnos a
                             LEFT JOIN usuarios u ON u.id_usuario = a.id_usuario
                             WHERE a.id_grupo = ?
@@ -81,9 +84,10 @@ if ($method === 'POST') {
         send_error('matricula, id_criterio y valor son requeridos');
     }
 
-    $stmt = $pdo->prepare('SELECT c.valor_puntos, c.tipo, a.id_periodo
+    $stmt = $pdo->prepare('SELECT c.valor_puntos, c.tipo, a.id_periodo, g.semestre
                             FROM criterios_evaluacion c
                             LEFT JOIN asignaciones_academicas a ON a.id_asignacion = c.id_asignacion
+                            LEFT JOIN grupos g ON g.id_grupo = a.id_grupo
                             WHERE c.id_criterio = ?');
     $stmt->execute([$idCriterio]);
     $criterio = $stmt->fetch();
@@ -92,7 +96,18 @@ if ($method === 'POST') {
         send_error('Criterio no encontrado', 404);
     }
 
-    $ventana = ventana_captura_estado($pdo, $criterio['id_periodo'], $criterio['tipo']);
+    $stmt = $pdo->prepare('SELECT estatus FROM alumnos WHERE matricula = ?');
+    $stmt->execute([$matricula]);
+    $estatusAlumno = $stmt->fetchColumn();
+
+    if ($estatusAlumno === false) {
+        send_error('Alumno no encontrado', 404);
+    }
+    if ($estatusAlumno === 'inactivo') {
+        send_error('El alumno está dado de baja temporal: no se le pueden registrar calificaciones', 403);
+    }
+
+    $ventana = ventana_captura_estado($pdo, $criterio['id_periodo'], $criterio['semestre'] !== null ? (int) $criterio['semestre'] : null, $criterio['tipo']);
     if (!$ventana['abierta']) {
         send_error('La ventana de captura para este periodo está cerrada', 403);
     }
@@ -119,7 +134,10 @@ if ($method === 'DELETE') {
         send_error('id_asignacion y un tipo válido son requeridos');
     }
 
-    $stmt = $pdo->prepare('SELECT id_periodo FROM asignaciones_academicas WHERE id_asignacion = ?');
+    $stmt = $pdo->prepare('SELECT a.id_periodo, g.semestre
+                            FROM asignaciones_academicas a
+                            JOIN grupos g ON g.id_grupo = a.id_grupo
+                            WHERE a.id_asignacion = ?');
     $stmt->execute([$idAsignacion]);
     $asignacion = $stmt->fetch();
 
@@ -127,14 +145,16 @@ if ($method === 'DELETE') {
         send_error('Asignación no encontrada', 404);
     }
 
-    $ventana = ventana_captura_estado($pdo, $asignacion['id_periodo'], $tipo);
+    $ventana = ventana_captura_estado($pdo, $asignacion['id_periodo'], (int) $asignacion['semestre'], $tipo);
     if (!$ventana['abierta']) {
         send_error('No se puede vaciar: la ventana de captura no está abierta', 403);
     }
 
-    $stmt = $pdo->prepare('DELETE cc FROM calificaciones_criterios cc
+    // Las calificaciones de alumnos en baja temporal no se modifican.
+    $stmt = $pdo->prepare("DELETE cc FROM calificaciones_criterios cc
                             JOIN criterios_evaluacion c ON c.id_criterio = cc.id_criterio
-                            WHERE c.id_asignacion = ? AND c.tipo = ?');
+                            JOIN alumnos al ON al.matricula = cc.matricula
+                            WHERE c.id_asignacion = ? AND c.tipo = ? AND al.estatus = 'activo'");
     $stmt->execute([$idAsignacion, $tipo]);
 
     echo json_encode(['success' => true, 'eliminadas' => $stmt->rowCount()]);

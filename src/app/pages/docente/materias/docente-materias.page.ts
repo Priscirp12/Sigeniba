@@ -1,7 +1,17 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { IonButton, IonContent, IonIcon, IonSearchbar } from '@ionic/angular/standalone';
+import {
+  IonButton,
+  IonContent,
+  IonIcon,
+  IonItem,
+  IonLabel,
+  IonSearchbar,
+  IonSelect,
+  IonSelectOption,
+  ViewWillEnter,
+} from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { arrowBackOutline } from 'ionicons/icons';
 import { AuthService } from '../../../services/auth.service';
@@ -25,13 +35,22 @@ interface MateriaResumen {
   selector: 'app-docente-materias',
   templateUrl: './docente-materias.page.html',
   styleUrls: ['./docente-materias.page.scss'],
-  imports: [CommonModule, FormsModule, IonContent, IonButton, IonIcon, IonSearchbar],
+  imports: [CommonModule, FormsModule, IonContent, IonButton, IonIcon, IonItem, IonLabel, IonSearchbar, IonSelect, IonSelectOption],
 })
-export class DocenteMateriasPage {
+export class DocenteMateriasPage implements ViewWillEnter {
   asignaciones: AsignacionDocente[] = [];
+  materias: MateriaResumen[] = [];
+  materiasFiltradas: MateriaResumen[] = [];
   cargando = false;
   filtroTexto = '';
   materiaSeleccionada: MateriaResumen | null = null;
+
+  // Un docente puede dar clases en varios semestres/generaciones a la vez;
+  // este selector evita que se mezclen todas sus materias en una sola lista.
+  generaciones: { id_periodo: string; etiqueta: string }[] = [];
+  generacionSeleccionada: string | null = null;
+  semestresDisponibles: number[] = [];
+  semestreSeleccionado: number | null = null;
 
   constructor(
     private readonly docenteService: DocenteService,
@@ -41,9 +60,53 @@ export class DocenteMateriasPage {
     this.cargarDatos();
   }
 
-  get materias(): MateriaResumen[] {
+  ionViewWillEnter(): void {
+    this.cargarDatos();
+  }
+
+  private actualizarGeneracionesYSemestre(): void {
+    const mapa = new Map<string, string>();
+    for (const a of this.asignaciones) {
+      mapa.set(a.id_periodo, a.ciclo_escolar);
+    }
+    this.generaciones = Array.from(mapa.entries()).map(([id_periodo, etiqueta]) => ({ id_periodo, etiqueta }));
+    if (!this.generacionSeleccionada || !mapa.has(this.generacionSeleccionada)) {
+      this.generacionSeleccionada = this.generaciones[0]?.id_periodo ?? null;
+    }
+    this.actualizarSemestresDisponibles();
+  }
+
+  private actualizarSemestresDisponibles(): void {
+    const semestres = new Set(
+      this.asignaciones.filter((a) => a.id_periodo === this.generacionSeleccionada).map((a) => a.semestre),
+    );
+    this.semestresDisponibles = Array.from(semestres).sort((a, b) => a - b);
+    if (this.semestreSeleccionado === null || !this.semestresDisponibles.includes(this.semestreSeleccionado)) {
+      this.semestreSeleccionado = this.semestresDisponibles[0] ?? null;
+    }
+  }
+
+  onCambioGeneracion(): void {
+    this.semestreSeleccionado = null;
+    this.actualizarSemestresDisponibles();
+    this.actualizarMaterias();
+    this.aplicarFiltro();
+  }
+
+  onCambioSemestre(): void {
+    this.actualizarMaterias();
+    this.aplicarFiltro();
+  }
+
+  private get asignacionesDelSemestre(): AsignacionDocente[] {
+    return this.asignaciones.filter(
+      (a) => a.id_periodo === this.generacionSeleccionada && a.semestre === this.semestreSeleccionado,
+    );
+  }
+
+  private actualizarMaterias(): void {
     const mapa = new Map<string, MateriaResumen>();
-    for (const asignacion of this.asignaciones) {
+    for (const asignacion of this.asignacionesDelSemestre) {
       const existente = mapa.get(asignacion.id_materia);
       const grupo: GrupoDeMateria = {
         grupo_nombre: asignacion.grupo_nombre,
@@ -62,15 +125,16 @@ export class DocenteMateriasPage {
         });
       }
     }
-    return Array.from(mapa.values());
+    this.materias = Array.from(mapa.values());
   }
 
-  get materiasFiltradas(): MateriaResumen[] {
+  aplicarFiltro(): void {
     const texto = this.filtroTexto.trim().toLowerCase();
     if (!texto) {
-      return this.materias;
+      this.materiasFiltradas = this.materias;
+      return;
     }
-    return this.materias.filter(
+    this.materiasFiltradas = this.materias.filter(
       (materia) => materia.nombre.toLowerCase().includes(texto) || (materia.clave ?? '').toLowerCase().includes(texto),
     );
   }
@@ -83,6 +147,9 @@ export class DocenteMateriasPage {
     this.cargando = true;
     try {
       this.asignaciones = await this.docenteService.getMisAsignaciones(idDocente);
+      this.actualizarGeneracionesYSemestre();
+      this.actualizarMaterias();
+      this.aplicarFiltro();
     } finally {
       this.cargando = false;
     }

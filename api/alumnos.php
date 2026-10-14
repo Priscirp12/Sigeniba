@@ -3,9 +3,11 @@ require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/helpers.php';
 
 $method = $_SERVER['REQUEST_METHOD'];
+$action = $_GET['action'] ?? null;
 
 if ($method === 'GET') {
-    $sql = 'SELECT a.matricula, a.id_usuario, a.id_grupo, a.id_periodo, a.email, a.telefono,
+    $sql = 'SELECT a.matricula, a.id_usuario, a.id_grupo, a.id_periodo, a.id_ciclo, a.email, a.telefono,
+                   a.estatus, a.fecha_baja, a.motivo_baja,
                    u.nombre, u.apellido_paterno, u.apellido_materno, u.sexo, u.edad,
                    g.nombre AS grupo_nombre, g.semestre
             FROM alumnos a
@@ -29,6 +31,10 @@ if ($method === 'GET') {
     if (!empty($_GET['sin_grupo'])) {
         $sql .= ' AND a.id_grupo IS NULL';
     }
+    if (!empty($_GET['estatus']) && in_array($_GET['estatus'], ['activo', 'inactivo'], true)) {
+        $sql .= ' AND a.estatus = ?';
+        $params[] = $_GET['estatus'];
+    }
 
     $sql .= ' ORDER BY u.apellido_paterno, u.apellido_materno, u.nombre';
 
@@ -51,9 +57,19 @@ if ($method === 'POST') {
     $email = $data['email'] ?? null;
     $telefono = $data['telefono'] ?? null;
     $idPeriodo = $data['id_periodo'] ?? null;
+    $idCiclo = $data['id_ciclo'] ?? null;
 
-    if (!$matricula || !$nombre || !$apellidoPaterno || !$password) {
-        send_error('Nombre, apellido paterno, matrícula y contraseña son requeridos');
+    if (!$matricula || !$nombre || !$apellidoPaterno || !$edad || !$password) {
+        send_error('Nombre, apellido paterno, matrícula, edad y contraseña son requeridos');
+    }
+    if (!preg_match('/^[A-Za-z0-9-]+$/', $matricula)) {
+        send_error('La matrícula solo puede contener letras, números y guiones, sin espacios');
+    }
+    if ($email && !email_valido($email)) {
+        send_error('El correo no tiene un formato válido');
+    }
+    if ($telefono && !telefono_valido($telefono)) {
+        send_error('El teléfono debe tener exactamente 10 dígitos numéricos');
     }
 
     $stmt = $pdo->prepare('SELECT id_usuario FROM usuarios WHERE id_usuario = ?');
@@ -68,8 +84,8 @@ if ($method === 'POST') {
         $stmt = $pdo->prepare('INSERT INTO usuarios (id_usuario, nombre, apellido_paterno, apellido_materno, edad, sexo, password_hash, rol) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
         $stmt->execute([$matricula, $nombre, $apellidoPaterno, $apellidoMaterno, $edad, $sexo, $hash, 'alumno']);
 
-        $stmt = $pdo->prepare('INSERT INTO alumnos (matricula, id_usuario, id_periodo, email, telefono) VALUES (?, ?, ?, ?, ?)');
-        $stmt->execute([$matricula, $matricula, $idPeriodo, $email, $telefono]);
+        $stmt = $pdo->prepare('INSERT INTO alumnos (matricula, id_usuario, id_periodo, id_ciclo, email, telefono) VALUES (?, ?, ?, ?, ?, ?)');
+        $stmt->execute([$matricula, $matricula, $idPeriodo, $idCiclo, $email, $telefono]);
 
         $pdo->commit();
     } catch (Throwable $e) {
@@ -78,6 +94,77 @@ if ($method === 'POST') {
     }
 
     echo json_encode(['success' => true, 'matricula' => $matricula]);
+    exit;
+}
+
+if ($method === 'PUT' && $action === 'baja') {
+    $data = read_json_body();
+    $matricula = trim($data['matricula'] ?? '');
+    $motivo = trim($data['motivo'] ?? '') ?: null;
+
+    if (!$matricula) {
+        send_error('Matrícula requerida');
+    }
+
+    $stmt = $pdo->prepare('SELECT estatus FROM alumnos WHERE matricula = ?');
+    $stmt->execute([$matricula]);
+    $alumno = $stmt->fetch();
+
+    if (!$alumno) {
+        send_error('Alumno no encontrado', 404);
+    }
+    if ($alumno['estatus'] === 'inactivo') {
+        send_error('El alumno ya se encuentra dado de baja temporal');
+    }
+
+    // Se conserva id_grupo para saber de qué grupo salió; las calificaciones ya
+    // capturadas se mantienen, pero no se podrán registrar nuevas.
+    $stmt = $pdo->prepare("UPDATE alumnos SET estatus = 'inactivo', fecha_baja = CURDATE(), motivo_baja = ? WHERE matricula = ?");
+    $stmt->execute([$motivo, $matricula]);
+
+    echo json_encode(['success' => true]);
+    exit;
+}
+
+if ($method === 'PUT' && $action === 'reincorporar') {
+    $data = read_json_body();
+    $matricula = trim($data['matricula'] ?? '');
+    $idGrupo = trim($data['id_grupo'] ?? '');
+
+    if (!$matricula || !$idGrupo) {
+        send_error('Matrícula y grupo nuevo son requeridos');
+    }
+
+    $stmt = $pdo->prepare('SELECT estatus, id_grupo FROM alumnos WHERE matricula = ?');
+    $stmt->execute([$matricula]);
+    $alumno = $stmt->fetch();
+
+    if (!$alumno) {
+        send_error('Alumno no encontrado', 404);
+    }
+    if ($alumno['estatus'] === 'activo') {
+        send_error('El alumno ya se encuentra activo');
+    }
+    if ($alumno['id_grupo'] === $idGrupo) {
+        send_error('Selecciona un grupo distinto al que tenía antes de la baja');
+    }
+
+    $stmt = $pdo->prepare('SELECT id_periodo, id_ciclo FROM grupos WHERE id_grupo = ?');
+    $stmt->execute([$idGrupo]);
+    $grupo = $stmt->fetch();
+
+    if (!$grupo) {
+        send_error('Grupo no encontrado', 404);
+    }
+
+    // El alumno se integra a la generación y ciclo escolar del grupo nuevo.
+    $stmt = $pdo->prepare("UPDATE alumnos
+                            SET estatus = 'activo', fecha_baja = NULL, motivo_baja = NULL,
+                                id_grupo = ?, id_periodo = ?, id_ciclo = COALESCE(?, id_ciclo)
+                            WHERE matricula = ?");
+    $stmt->execute([$idGrupo, $grupo['id_periodo'], $grupo['id_ciclo'], $matricula]);
+
+    echo json_encode(['success' => true]);
     exit;
 }
 
@@ -99,6 +186,21 @@ if ($method === 'PUT') {
 
     $idUsuario = $alumno['id_usuario'];
     $nuevaMatricula = trim($data['nueva_matricula'] ?? '') ?: $matricula;
+    if ($nuevaMatricula !== $matricula && !preg_match('/^[A-Za-z0-9-]+$/', $nuevaMatricula)) {
+        send_error('La matrícula solo puede contener letras, números y guiones, sin espacios');
+    }
+
+    foreach (['nombre', 'apellido_paterno', 'edad'] as $requerido) {
+        if (array_key_exists($requerido, $data) && !$data[$requerido]) {
+            send_error('Nombre, apellido paterno y edad no pueden quedar vacíos');
+        }
+    }
+    if (!empty($data['email']) && !email_valido($data['email'])) {
+        send_error('El correo no tiene un formato válido');
+    }
+    if (!empty($data['telefono']) && !telefono_valido($data['telefono'])) {
+        send_error('El teléfono debe tener exactamente 10 dígitos numéricos');
+    }
 
     $pdo->beginTransaction();
     try {
@@ -132,7 +234,7 @@ if ($method === 'PUT') {
 
         $alumnoSets = [];
         $alumnoParams = [];
-        foreach (['email', 'telefono', 'id_periodo'] as $field) {
+        foreach (['email', 'telefono', 'id_periodo', 'id_ciclo'] as $field) {
             if (array_key_exists($field, $data)) {
                 $alumnoSets[] = "$field = ?";
                 $alumnoParams[] = $data[$field];

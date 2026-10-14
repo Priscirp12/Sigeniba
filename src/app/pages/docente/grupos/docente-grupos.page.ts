@@ -8,10 +8,15 @@ import {
   IonContent,
   IonHeader,
   IonIcon,
+  IonItem,
+  IonLabel,
   IonModal,
   IonSearchbar,
+  IonSelect,
+  IonSelectOption,
   IonTitle,
   IonToolbar,
+  ViewWillEnter,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { arrowBackOutline } from 'ionicons/icons';
@@ -32,12 +37,35 @@ const ETIQUETAS_TIPO: Record<TipoEvaluacion, string> = {
   selector: 'app-docente-grupos',
   templateUrl: './docente-grupos.page.html',
   styleUrls: ['./docente-grupos.page.scss'],
-  imports: [CommonModule, FormsModule, IonHeader, IonToolbar, IonButtons, IonTitle, IonContent, IonButton, IonIcon, IonModal, IonSearchbar],
+  imports: [
+    CommonModule,
+    FormsModule,
+    IonHeader,
+    IonToolbar,
+    IonButtons,
+    IonTitle,
+    IonContent,
+    IonButton,
+    IonIcon,
+    IonItem,
+    IonLabel,
+    IonModal,
+    IonSearchbar,
+    IonSelect,
+    IonSelectOption,
+  ],
 })
-export class DocenteGruposPage {
+export class DocenteGruposPage implements ViewWillEnter {
   asignaciones: AsignacionDocente[] = [];
   cargando = false;
   filtroTexto = '';
+
+  // Un docente puede dar clases en varios semestres/generaciones a la vez;
+  // este selector evita que se mezclen todos sus grupos en una sola lista.
+  generaciones: { id_periodo: string; etiqueta: string }[] = [];
+  generacionSeleccionada: string | null = null;
+  semestresDisponibles: number[] = [];
+  semestreSeleccionado: number | null = null;
 
   grupoSeleccionado: AsignacionDocente | null = null;
   alumnos: AlumnoAdmin[] = [];
@@ -56,14 +84,48 @@ export class DocenteGruposPage {
     this.cargarDatos();
   }
 
+  ionViewWillEnter(): void {
+    this.cargarDatos();
+  }
+
   get asignacionesFiltradas(): AsignacionDocente[] {
+    const delSemestre = this.asignaciones.filter(
+      (a) => a.id_periodo === this.generacionSeleccionada && a.semestre === this.semestreSeleccionado,
+    );
     const texto = this.filtroTexto.trim().toLowerCase();
     if (!texto) {
-      return this.asignaciones;
+      return delSemestre;
     }
-    return this.asignaciones.filter(
+    return delSemestre.filter(
       (a) => a.grupo_nombre.toLowerCase().includes(texto) || a.materia_nombre.toLowerCase().includes(texto),
     );
+  }
+
+  private actualizarGeneracionesYSemestre(): void {
+    const mapa = new Map<string, string>();
+    for (const a of this.asignaciones) {
+      mapa.set(a.id_periodo, a.ciclo_escolar);
+    }
+    this.generaciones = Array.from(mapa.entries()).map(([id_periodo, etiqueta]) => ({ id_periodo, etiqueta }));
+    if (!this.generacionSeleccionada || !mapa.has(this.generacionSeleccionada)) {
+      this.generacionSeleccionada = this.generaciones[0]?.id_periodo ?? null;
+    }
+    this.actualizarSemestresDisponibles();
+  }
+
+  private actualizarSemestresDisponibles(): void {
+    const semestres = new Set(
+      this.asignaciones.filter((a) => a.id_periodo === this.generacionSeleccionada).map((a) => a.semestre),
+    );
+    this.semestresDisponibles = Array.from(semestres).sort((a, b) => a - b);
+    if (this.semestreSeleccionado === null || !this.semestresDisponibles.includes(this.semestreSeleccionado)) {
+      this.semestreSeleccionado = this.semestresDisponibles[0] ?? null;
+    }
+  }
+
+  onCambioGeneracion(): void {
+    this.semestreSeleccionado = null;
+    this.actualizarSemestresDisponibles();
   }
 
   async cargarDatos(): Promise<void> {
@@ -74,6 +136,7 @@ export class DocenteGruposPage {
     this.cargando = true;
     try {
       this.asignaciones = await this.docenteService.getMisAsignaciones(idDocente);
+      this.actualizarGeneracionesYSemestre();
     } finally {
       this.cargando = false;
     }

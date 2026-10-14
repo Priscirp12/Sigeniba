@@ -3,6 +3,7 @@ import { Component } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import {
   IonButton,
+  IonButtons,
   IonContent,
   IonHeader,
   IonIcon,
@@ -21,10 +22,12 @@ import {
   documentTextOutline,
   listOutline,
   logOutOutline,
+  menuOutline,
   personCircleOutline,
   schoolOutline,
 } from 'ionicons/icons';
 import { AuthService } from '../../services/auth.service';
+import { MenuLateralService } from '../../services/menu-lateral.service';
 
 @Component({
   selector: 'app-alumno-shell',
@@ -46,6 +49,7 @@ import { AuthService } from '../../services/auth.service';
     IonLabel,
     IonIcon,
     IonButton,
+    IonButtons,
   ],
 })
 export class AlumnoShellPage {
@@ -55,12 +59,21 @@ export class AlumnoShellPage {
   constructor(
     private readonly authService: AuthService,
     private readonly router: Router,
+    readonly menuLateral: MenuLateralService,
   ) {
-    addIcons({ schoolOutline, listOutline, personCircleOutline, logOutOutline, chevronDownOutline, documentTextOutline });
+    addIcons({ schoolOutline, listOutline, personCircleOutline, logOutOutline, chevronDownOutline, documentTextOutline, menuOutline });
   }
 
   get usuario() {
     return this.authService.user;
+  }
+
+  irAlInicio(): void {
+    this.router.navigateByUrl('/alumno');
+  }
+
+  async alternarMenu(): Promise<void> {
+    await this.menuLateral.alternar('alumno-menu');
   }
 
   cerrarSesion(): void {

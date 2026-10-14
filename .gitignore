@@ -12,6 +12,9 @@ $RECYCLE.BIN/
 *.log
 log.txt
 
+# Manuales generados (el técnico incluye credenciales reales, no debe subirse a git)
+/manuales
+
 
 /.sourcemaps
 /.versions

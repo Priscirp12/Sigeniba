@@ -16,6 +16,12 @@
 
   <h2 class="section-title">Alumnos</h2>
 
+  <ion-segment [(ngModel)]="filtroEstatus" class="filtro-estatus">
+    <ion-segment-button value="todos">Todos</ion-segment-button>
+    <ion-segment-button value="activo">Activos</ion-segment-button>
+    <ion-segment-button value="inactivo">Baja temporal</ion-segment-button>
+  </ion-segment>
+
   <div class="table-wrapper">
     <table>
       <thead>
@@ -23,6 +29,7 @@
           <th>Matrícula</th>
           <th>Nombre</th>
           <th>Grupo</th>
+          <th>Estatus</th>
           <th>Acciones</th>
         </tr>
       </thead>
@@ -31,6 +38,11 @@
           <td>{{ alumno.matricula }}</td>
           <td>{{ alumno.nombre }} {{ alumno.apellido_paterno }} {{ alumno.apellido_materno }}</td>
           <td>{{ alumno.grupo_nombre ?? 'Sin grupo' }}</td>
+          <td>
+            <span class="estatus" [class.activo]="alumno.estatus === 'activo'" [class.inactivo]="alumno.estatus === 'inactivo'">
+              {{ alumno.estatus === 'inactivo' ? 'Inactivo' : 'Activo' }}
+            </span>
+          </td>
           <td class="acciones">
             <ion-button size="small" fill="clear" (click)="abrirDetalle(alumno)">
               <ion-icon slot="icon-only" name="information-circle-outline"></ion-icon>
@@ -39,10 +51,18 @@
               <ion-icon slot="start" name="create-outline"></ion-icon>
               Editar
             </ion-button>
+            <ion-button *ngIf="alumno.estatus !== 'inactivo'" size="small" fill="outline" color="warning" (click)="abrirBaja(alumno)">
+              <ion-icon slot="start" name="pause-circle-outline"></ion-icon>
+              Baja temporal
+            </ion-button>
+            <ion-button *ngIf="alumno.estatus === 'inactivo'" size="small" fill="outline" color="success" (click)="abrirReincorporar(alumno)">
+              <ion-icon slot="start" name="play-circle-outline"></ion-icon>
+              Reincorporar
+            </ion-button>
           </td>
         </tr>
         <tr *ngIf="!cargando && !alumnosFiltrados.length">
-          <td colspan="4" class="empty">No hay alumnos que coincidan con la búsqueda.</td>
+          <td colspan="5" class="empty">No hay alumnos que coincidan con la búsqueda.</td>
         </tr>
       </tbody>
     </table>
@@ -105,11 +125,104 @@
           </ion-item>
           <ion-item>
             <ion-label>
+              <p>Estatus</p>
+              <h3>{{ alumno.estatus === 'inactivo' ? 'Inactivo (baja temporal)' : 'Activo' }}</h3>
+            </ion-label>
+          </ion-item>
+          <ion-item *ngIf="alumno.estatus === 'inactivo'">
+            <ion-label>
+              <p>Fecha de baja</p>
+              <h3>{{ alumno.fecha_baja ?? '-' }}</h3>
+            </ion-label>
+          </ion-item>
+          <ion-item *ngIf="alumno.estatus === 'inactivo'">
+            <ion-label class="ion-text-wrap">
+              <p>Motivo de la baja</p>
+              <h3>{{ alumno.motivo_baja || '-' }}</h3>
+            </ion-label>
+          </ion-item>
+          <ion-item>
+            <ion-label>
               <p>Periodo</p>
               <h3>{{ periodoNombre(alumno.id_periodo) }}</h3>
             </ion-label>
           </ion-item>
+          <ion-item>
+            <ion-label>
+              <p>Ciclo escolar</p>
+              <h3>{{ cicloNombre(alumno.id_ciclo) }}</h3>
+            </ion-label>
+          </ion-item>
         </ion-list>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+
+  <!-- Modal de baja temporal -->
+  <ion-modal [isOpen]="modalBajaAbierto" (didDismiss)="cerrarBaja()">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar>
+          <ion-title>Baja temporal</ion-title>
+          <ion-buttons slot="end">
+            <ion-button (click)="cerrarBaja()">Cerrar</ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content class="ion-padding" *ngIf="alumnoBaja as alumno">
+        <p class="aviso-estatus">
+          El estatus de <strong>{{ alumno.nombre }} {{ alumno.apellido_paterno }} {{ alumno.apellido_materno }}</strong>
+          ({{ alumno.matricula }}) cambiará de <strong>activo</strong> a <strong>inactivo</strong>. Mientras esté
+          inactivo no se le podrán registrar calificaciones. Sus calificaciones actuales se conservan.
+        </p>
+        <ion-list lines="none">
+          <ion-item>
+            <ion-label position="stacked">Motivo (opcional)</ion-label>
+            <ion-textarea [(ngModel)]="motivoBaja" [autoGrow]="true" maxlength="255"></ion-textarea>
+          </ion-item>
+        </ion-list>
+        <div class="actions">
+          <ion-button color="medium" fill="outline" (click)="cerrarBaja()">Cancelar</ion-button>
+          <ion-button color="warning" [disabled]="procesandoEstatus" (click)="confirmarBaja()">Dar de baja</ion-button>
+        </div>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+
+  <!-- Modal de reincorporación -->
+  <ion-modal [isOpen]="modalReincorporarAbierto" (didDismiss)="cerrarReincorporar()">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar>
+          <ion-title>Reincorporar alumno</ion-title>
+          <ion-buttons slot="end">
+            <ion-button (click)="cerrarReincorporar()">Cerrar</ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content class="ion-padding" *ngIf="alumnoReincorporar as alumno">
+        <p class="aviso-estatus">
+          El estatus de <strong>{{ alumno.nombre }} {{ alumno.apellido_paterno }} {{ alumno.apellido_materno }}</strong>
+          ({{ alumno.matricula }}) cambiará de <strong>inactivo</strong> a <strong>activo</strong>.
+          <span *ngIf="alumno.grupo_nombre">Grupo anterior: {{ alumno.grupo_nombre }}.</span>
+        </p>
+        <ion-list lines="none">
+          <ion-item>
+            <ion-label position="stacked">Grupo nuevo</ion-label>
+            <ion-select [(ngModel)]="grupoReincorporacion" interface="popover" placeholder="Selecciona un grupo">
+              <ion-select-option *ngFor="let grupo of gruposReincorporacion" [value]="grupo.id_grupo">
+                {{ grupo.nombre }} — Semestre {{ grupo.semestre }} ({{ periodoNombre(grupo.id_periodo) }})
+              </ion-select-option>
+            </ion-select>
+            <ion-note *ngIf="!gruposReincorporacion.length">No hay grupos disponibles. Crea uno en "Gestión de Grupos".</ion-note>
+          </ion-item>
+        </ion-list>
+        <div class="actions">
+          <ion-button color="medium" fill="outline" (click)="cerrarReincorporar()">Cancelar</ion-button>
+          <ion-button color="success" [disabled]="procesandoEstatus || !grupoReincorporacion" (click)="confirmarReincorporacion()">
+            Reincorporar
+          </ion-button>
+        </div>
       </ion-content>
     </ng-template>
   </ion-modal>
@@ -141,7 +254,7 @@
           </ion-item>
           <ion-item>
             <ion-label position="stacked">Matrícula</ion-label>
-            <ion-input [(ngModel)]="form.matricula"></ion-input>
+            <ion-input [(ngModel)]="form.matricula" placeholder="Ej. 262410038" maxlength="20"></ion-input>
           </ion-item>
           <ion-item>
             <ion-label position="stacked">Género</ion-label>
@@ -160,7 +273,14 @@
           </ion-item>
           <ion-item>
             <ion-label position="stacked">Teléfono</ion-label>
-            <ion-input [(ngModel)]="form.telefono"></ion-input>
+            <ion-input
+              type="tel"
+              inputmode="numeric"
+              maxlength="10"
+              [value]="form.telefono"
+              (keydown)="bloquearTeclaNoNumerica($event)"
+              (ionInput)="onTelefonoInput($any($event.detail.value) ?? '')"
+            ></ion-input>
           </ion-item>
           <ion-item>
             <ion-label position="stacked">Periodo</ion-label>
@@ -169,6 +289,14 @@
               <ion-select-option *ngFor="let periodo of periodos" [value]="periodo.id_periodo">{{ periodo.ciclo_escolar }}</ion-select-option>
             </ion-select>
             <ion-note *ngIf="!periodos.length">Aún no hay periodos escolares. Crea uno en "Fechas de captura".</ion-note>
+          </ion-item>
+          <ion-item>
+            <ion-label position="stacked">Ciclo escolar</ion-label>
+            <ion-select [(ngModel)]="form.id_ciclo" interface="popover">
+              <ion-select-option [value]="null">Sin especificar</ion-select-option>
+              <ion-select-option *ngFor="let ciclo of ciclos" [value]="ciclo.id_ciclo">{{ ciclo.nombre }}</ion-select-option>
+            </ion-select>
+            <ion-note *ngIf="!ciclos.length">Aún no hay ciclos escolares. Crea uno en "Fechas de captura".</ion-note>
           </ion-item>
           <ion-item>
             <ion-label position="stacked">{{ modoEdicion ? 'Nueva contraseña (opcional)' : 'Contraseña' }}</ion-label>

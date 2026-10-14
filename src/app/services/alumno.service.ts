@@ -27,10 +27,14 @@ export interface MateriaCalificacionesAlumno {
 export interface MateriaHistorial {
   nombre: string;
   calificacion: number;
+  origen_calificacion: 'regular' | 'extraordinario' | 'intersemestral';
+  calificacion_regular: number | null;
+  calificacion_extraordinario: number | null;
+  calificacion_intersemestral: number | null;
 }
 
 export interface SemestreHistorial {
-  id_periodo: string;
+  semestre: number;
   etiqueta: string;
   materias: MateriaHistorial[];
   promedio_semestre: number;

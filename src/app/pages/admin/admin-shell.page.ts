@@ -3,6 +3,7 @@ import { Component } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import {
   IonButton,
+  IonButtons,
   IonContent,
   IonHeader,
   IonIcon,
@@ -23,11 +24,13 @@ import {
   documentTextOutline,
   keyOutline,
   logOutOutline,
+  menuOutline,
   peopleOutline,
   personCircleOutline,
   schoolOutline,
 } from 'ionicons/icons';
 import { AuthService } from '../../services/auth.service';
+import { MenuLateralService } from '../../services/menu-lateral.service';
 
 type GrupoMenu = 'alumnos' | 'docentes' | 'grupos';
 
@@ -51,6 +54,7 @@ type GrupoMenu = 'alumnos' | 'docentes' | 'grupos';
     IonLabel,
     IonIcon,
     IonButton,
+    IonButtons,
   ],
 })
 export class AdminShellPage {
@@ -63,6 +67,7 @@ export class AdminShellPage {
   constructor(
     private readonly authService: AuthService,
     private readonly router: Router,
+    readonly menuLateral: MenuLateralService,
   ) {
     addIcons({
       peopleOutline,
@@ -72,6 +77,7 @@ export class AdminShellPage {
       keyOutline,
       personCircleOutline,
       logOutOutline,
+      menuOutline,
       chevronDownOutline,
       documentTextOutline,
     });
@@ -83,6 +89,14 @@ export class AdminShellPage {
 
   toggleGrupo(grupo: GrupoMenu): void {
     this.openGroups[grupo] = !this.openGroups[grupo];
+  }
+
+  irAlInicio(): void {
+    this.router.navigateByUrl('/admin');
+  }
+
+  async alternarMenu(): Promise<void> {
+    await this.menuLateral.alternar('admin-menu');
   }
 
   cerrarSesion(): void {

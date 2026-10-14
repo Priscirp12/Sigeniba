@@ -28,8 +28,14 @@ if ($method === 'POST') {
     $email = $data['email'] ?? null;
     $telefono = $data['telefono'] ?? null;
 
-    if (!$idDocente || !$nombre || !$apellidoPaterno || !$password || !$especialidad) {
-        send_error('Nombre, apellido paterno, clave de docente, especialidad y contraseña son requeridos');
+    if (!$idDocente || !$nombre || !$apellidoPaterno || !$edad || !$password || !$especialidad) {
+        send_error('Nombre, apellido paterno, clave de docente, edad, especialidad y contraseña son requeridos');
+    }
+    if ($email && !email_valido($email)) {
+        send_error('El correo no tiene un formato válido');
+    }
+    if ($telefono && !telefono_valido($telefono)) {
+        send_error('El teléfono debe tener exactamente 10 dígitos numéricos');
     }
 
     $stmt = $pdo->prepare('SELECT id_usuario FROM usuarios WHERE id_usuario = ?');
@@ -75,6 +81,18 @@ if ($method === 'PUT') {
 
     $idUsuario = $docente['id_usuario'];
     $nuevaClave = trim($data['nueva_clave'] ?? '') ?: $idDocente;
+
+    foreach (['nombre', 'apellido_paterno', 'edad'] as $requerido) {
+        if (array_key_exists($requerido, $data) && !$data[$requerido]) {
+            send_error('Nombre, apellido paterno y edad no pueden quedar vacíos');
+        }
+    }
+    if (!empty($data['email']) && !email_valido($data['email'])) {
+        send_error('El correo no tiene un formato válido');
+    }
+    if (!empty($data['telefono']) && !telefono_valido($data['telefono'])) {
+        send_error('El teléfono debe tener exactamente 10 dígitos numéricos');
+    }
 
     $pdo->beginTransaction();
     try {

@@ -1,8 +1,9 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { IonButton, IonContent, IonItem, IonLabel, IonTextarea, ToastController } from '@ionic/angular/standalone';
+import { IonButton, IonContent, IonItem, IonLabel, IonTextarea } from '@ionic/angular/standalone';
 import { AdminService } from '../../../services/admin.service';
+import { AlertaService, TipoAlerta } from '../../../services/alerta.service';
 
 const EJEMPLO = {
   NOMBRE: 'JUAN PÉREZ LÓPEZ',
@@ -24,7 +25,7 @@ export class AdminHistorialPage {
 
   constructor(
     private readonly adminService: AdminService,
-    private readonly toastController: ToastController,
+    private readonly alertas: AlertaService,
   ) {
     this.cargarPlantilla();
   }
@@ -64,8 +65,7 @@ export class AdminHistorialPage {
     }
   }
 
-  private async mostrarToast(message: string, color: 'success' | 'danger'): Promise<void> {
-    const toast = await this.toastController.create({ message, color, duration: 2500, position: 'bottom' });
-    await toast.present();
+  private async mostrarToast(message: string, color: TipoAlerta): Promise<void> {
+    await this.alertas.mostrar(message, color);
   }
 }

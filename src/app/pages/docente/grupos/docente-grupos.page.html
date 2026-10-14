@@ -4,6 +4,21 @@
     <ion-searchbar [(ngModel)]="filtroTexto" placeholder="Buscar Grupo" showClearButton="always"></ion-searchbar>
   </div>
 
+  <div class="selectores-semestre">
+    <ion-item>
+      <ion-label position="stacked">Generación</ion-label>
+      <ion-select [(ngModel)]="generacionSeleccionada" (ionChange)="onCambioGeneracion()" interface="popover">
+        <ion-select-option *ngFor="let g of generaciones" [value]="g.id_periodo">{{ g.etiqueta }}</ion-select-option>
+      </ion-select>
+    </ion-item>
+    <ion-item>
+      <ion-label position="stacked">Semestre</ion-label>
+      <ion-select [(ngModel)]="semestreSeleccionado" interface="popover">
+        <ion-select-option *ngFor="let s of semestresDisponibles" [value]="s">Semestre {{ s }}</ion-select-option>
+      </ion-select>
+    </ion-item>
+  </div>
+
   <div class="table-wrapper">
     <table>
       <thead>

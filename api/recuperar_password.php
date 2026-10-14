@@ -18,11 +18,17 @@ if (!$identificador) {
 $mensajeGenerico = 'Si el usuario existe y tiene permiso para recuperar su contraseña, '
     . 'se enviará un enlace a su correo registrado.';
 
+// El correo de un docente puede estar en usuarios.email (correo de recuperación)
+// o en docentes.email (el que ya se captura desde "Gestión de Docentes"); se
+// revisan ambos para no depender de que el admin lo llene dos veces.
 $stmt = $pdo->prepare(
-    "SELECT id_usuario, nombre, email, rol FROM usuarios
-     WHERE (id_usuario = ? OR email = ?) AND rol IN ('docente','administrador') LIMIT 1"
+    "SELECT u.id_usuario, u.nombre, u.rol, COALESCE(u.email, d.email) AS email
+     FROM usuarios u
+     LEFT JOIN docentes d ON d.id_usuario = u.id_usuario
+     WHERE (u.id_usuario = ? OR u.email = ? OR d.email = ?) AND u.rol IN ('docente','administrador')
+     LIMIT 1"
 );
-$stmt->execute([$identificador, $identificador]);
+$stmt->execute([$identificador, $identificador, $identificador]);
 $usuario = $stmt->fetch();
 
 if ($usuario && !empty($usuario['email'])) {

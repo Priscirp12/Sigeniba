@@ -1,10 +1,17 @@
 <?php
+// Endpoint de criterios de evaluación: cada asignación (materia+grupo+docente+periodo)
+// define, por cada tipo de evaluación (parcial1/2/3, extraordinario, intersemestral),
+// un conjunto de criterios cuyos puntos deben sumar 10 (ej. Examen 5 + Tareas 3 +
+// Participación 2). El criterio "Examen" es fijo: se crea automáticamente y no se
+// puede eliminar, solo editar su valor (máximo 5 puntos).
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/helpers.php';
 
 $method = $_SERVER['REQUEST_METHOD'];
 $tiposValidos = ['parcial1', 'parcial2', 'parcial3', 'extraordinario', 'intersemestral'];
 
+// Devuelve los criterios ya guardados de una asignación y tipo de evaluación,
+// con el criterio "Examen" siempre primero.
 function obtener_criterios(PDO $pdo, string $idAsignacion, string $tipo): array
 {
     $stmt = $pdo->prepare('SELECT id_criterio, id_asignacion, nombre, valor_puntos, tipo, es_examen
@@ -15,6 +22,11 @@ function obtener_criterios(PDO $pdo, string $idAsignacion, string $tipo): array
     return $stmt->fetchAll();
 }
 
+// GET: consulta los criterios de una asignación+tipo. Si es la primera vez que se
+// piden (no existe ninguno todavía), crea automáticamente el criterio fijo "Examen"
+// (5 puntos) antes de responder, para que el docente siempre parta de ese criterio
+// ya existente. También informa si ese tipo ya tiene calificaciones capturadas,
+// dato que el frontend usa para bloquear la edición de los criterios.
 if ($method === 'GET') {
     $idAsignacion = $_GET['id_asignacion'] ?? null;
     $tipo = $_GET['tipo'] ?? null;
@@ -39,6 +51,10 @@ if ($method === 'GET') {
     exit;
 }
 
+// POST: agrega un criterio nuevo (no-"Examen") a una asignación+tipo. Antes de
+// insertar valida que: (1) ese tipo no tenga ya calificaciones capturadas (si las
+// tiene, los criterios quedan bloqueados hasta vaciarlas), y (2) la suma de los
+// criterios existentes más el nuevo no rebase los 10 puntos permitidos.
 if ($method === 'POST') {
     $data = read_json_body();
     $idAsignacion = $data['id_asignacion'] ?? null;
@@ -74,6 +90,10 @@ if ($method === 'POST') {
     exit;
 }
 
+// PUT: edita el valor en puntos (y, si no es el criterio "Examen", también el
+// nombre) de un criterio existente. Igual que en POST, bloquea el cambio si ya
+// hay calificaciones capturadas, revisa que "Examen" no pase de 5 puntos, y que
+// el resto de criterios más el nuevo valor no exceda la suma de 10.
 if ($method === 'PUT') {
     $data = read_json_body();
     $idCriterio = $data['id_criterio'] ?? null;
@@ -111,6 +131,7 @@ if ($method === 'PUT') {
         send_error('La suma de los criterios no puede exceder 10 puntos (el resto suma ' . round($suma, 2) . ')');
     }
 
+    // El nombre del criterio "Examen" es fijo; solo se permite renombrar los demás.
     $sets = ['valor_puntos = ?'];
     $params = [$valorPuntos];
     if (!$criterio['es_examen'] && array_key_exists('nombre', $data) && trim($data['nombre']) !== '') {
@@ -126,6 +147,10 @@ if ($method === 'PUT') {
     exit;
 }
 
+// DELETE: elimina un criterio (nunca el de "Examen", que es fijo), siempre que
+// esa evaluación no tenga ya calificaciones capturadas. El try/catch es un
+// respaldo por si la base de datos rechaza el borrado (ej. por una llave foránea)
+// aunque la validación anterior ya debería haberlo evitado.
 if ($method === 'DELETE') {
     $idCriterio = $_GET['id_criterio'] ?? null;
 
@@ -159,4 +184,5 @@ if ($method === 'DELETE') {
     exit;
 }
 
+// Cualquier otro método HTTP no está soportado en este endpoint.
 send_error('Método no permitido', 405);

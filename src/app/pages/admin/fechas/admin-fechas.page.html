@@ -1,14 +1,43 @@
 <ion-content class="ion-padding admin-shell">
   <div class="page-header">
     <h1>Fechas de captura</h1>
-    <ion-button (click)="mostrarNuevoPeriodo = !mostrarNuevoPeriodo">
-      <ion-icon slot="start" name="add-outline"></ion-icon>
-      Nuevo periodo
-    </ion-button>
+    <div class="page-header-actions">
+      <ion-button fill="outline" (click)="mostrarNuevoCiclo = !mostrarNuevoCiclo">
+        <ion-icon slot="start" name="add-outline"></ion-icon>
+        Nuevo ciclo escolar
+      </ion-button>
+      <ion-button (click)="mostrarNuevoPeriodo = !mostrarNuevoPeriodo">
+        <ion-icon slot="start" name="add-outline"></ion-icon>
+        Nuevo periodo (generación)
+      </ion-button>
+    </div>
   </div>
 
+  <ion-list lines="none" *ngIf="mostrarNuevoCiclo">
+    <h3>Nuevo ciclo escolar</h3>
+    <p class="ayuda">
+      Un ciclo escolar es un año calendario (ej. "2024-2025"). Varias generaciones avanzan al mismo tiempo
+      dentro de un mismo ciclo escolar.
+    </p>
+    <ion-item>
+      <ion-label position="stacked">Nombre</ion-label>
+      <ion-input [(ngModel)]="nuevoNombreCiclo" placeholder="Ej. 2024-2025"></ion-input>
+    </ion-item>
+    <ion-item>
+      <ion-label position="stacked">Fecha de inicio</ion-label>
+      <ion-input type="date" [(ngModel)]="nuevoCicloFechaInicio"></ion-input>
+    </ion-item>
+    <ion-item>
+      <ion-label position="stacked">Fecha de fin</ion-label>
+      <ion-input type="date" [(ngModel)]="nuevoCicloFechaFin"></ion-input>
+    </ion-item>
+    <div class="actions">
+      <ion-button [disabled]="creandoCiclo" (click)="crearCiclo()">Crear ciclo escolar</ion-button>
+    </div>
+  </ion-list>
+
   <ion-list lines="none" *ngIf="mostrarNuevoPeriodo">
-    <h3>Nuevo periodo escolar</h3>
+    <h3>Nuevo periodo escolar (generación)</h3>
     <ion-item>
       <ion-label position="stacked">Ciclo escolar</ion-label>
       <ion-input [(ngModel)]="nuevoCicloEscolar" placeholder="Ej. 2025-2026"></ion-input>
@@ -26,12 +55,20 @@
     </div>
   </ion-list>
 
-  <ion-item>
-    <ion-label position="stacked">Periodo escolar</ion-label>
-    <ion-select [(ngModel)]="periodoSeleccionado" (ionChange)="onPeriodoChange()">
-      <ion-select-option *ngFor="let periodo of periodos" [value]="periodo.id_periodo">{{ periodo.ciclo_escolar }}</ion-select-option>
-    </ion-select>
-  </ion-item>
+  <div class="selectores">
+    <ion-item>
+      <ion-label position="stacked">Periodo escolar (generación)</ion-label>
+      <ion-select [(ngModel)]="periodoSeleccionado" (ionChange)="onPeriodoChange()">
+        <ion-select-option *ngFor="let periodo of periodos" [value]="periodo.id_periodo">{{ periodo.ciclo_escolar }}</ion-select-option>
+      </ion-select>
+    </ion-item>
+    <ion-item>
+      <ion-label position="stacked">Semestre</ion-label>
+      <ion-select [(ngModel)]="semestreSeleccionado" (ionChange)="onSemestreChange()">
+        <ion-select-option *ngFor="let s of semestres" [value]="s">Semestre {{ s }}</ion-select-option>
+      </ion-select>
+    </ion-item>
+  </div>
 
   <ion-item *ngIf="!periodos.length">
     <ion-label class="empty">Aún no hay periodos escolares. Crea uno con el botón "+".</ion-label>

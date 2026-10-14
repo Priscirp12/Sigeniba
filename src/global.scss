@@ -39,3 +39,55 @@
 /* @import "@ionic/angular/css/palettes/dark.always.css"; */
 /* @import "@ionic/angular/css/palettes/dark.class.css"; */
 /* @import '@ionic/angular/css/palettes/dark.system.css'; */
+
+/* Nombre SIGENIBA en la barra superior y el menú: botón que lleva al inicio. */
+.brand-button {
+  background: none;
+  border: 0;
+  padding: 0.25rem 0.4rem;
+  margin-left: -0.4rem;
+  border-radius: 8px;
+  font: inherit;
+  color: inherit;
+  letter-spacing: inherit;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.brand-button:hover {
+  color: #1f6cb5;
+  background: #eef4fb;
+}
+
+.brand-button:focus-visible {
+  outline: 2px solid #1f6cb5;
+  outline-offset: 2px;
+}
+
+.menu-toggle {
+  --color: #0f3d67;
+}
+
+/* Alertas de colores (AlertaService). */
+ion-toast.alerta-sigeniba {
+  --border-radius: 12px;
+  --box-shadow: 0 12px 32px rgba(15, 23, 42, 0.28);
+  --min-width: min(340px, calc(100vw - 32px));
+  --max-width: min(560px, calc(100vw - 32px));
+  --start: 0;
+  --end: 0;
+  font-weight: 600;
+}
+
+ion-toast.alerta-sigeniba::part(icon) {
+  font-size: 1.6rem;
+}
+
+ion-toast.alerta-sigeniba::part(message) {
+  font-size: 0.95rem;
+  line-height: 1.35;
+}
+
+ion-toast.alerta-warning {
+  --color: #422006;
+}

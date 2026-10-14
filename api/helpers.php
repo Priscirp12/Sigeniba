@@ -26,14 +26,14 @@ function send_error(string $message, int $code = 400): void
     exit;
 }
 
-function ventana_captura_estado(PDO $pdo, ?string $idPeriodo, string $tipo): array
+function ventana_captura_estado(PDO $pdo, ?string $idPeriodo, ?int $semestre, string $tipo): array
 {
-    if (!$idPeriodo) {
+    if (!$idPeriodo || !$semestre) {
         return ['abierta' => false, 'fecha_inicio' => null, 'fecha_fin' => null];
     }
 
-    $stmt = $pdo->prepare('SELECT fecha_inicio, fecha_fin FROM ventanas_captura WHERE id_periodo = ? AND tipo = ?');
-    $stmt->execute([$idPeriodo, $tipo]);
+    $stmt = $pdo->prepare('SELECT fecha_inicio, fecha_fin FROM ventanas_captura WHERE id_periodo = ? AND semestre = ? AND tipo = ?');
+    $stmt->execute([$idPeriodo, $semestre, $tipo]);
     $ventana = $stmt->fetch();
 
     if (!$ventana) {
@@ -44,6 +44,16 @@ function ventana_captura_estado(PDO $pdo, ?string $idPeriodo, string $tipo): arr
     $abierta = $hoy >= $ventana['fecha_inicio'] && $hoy <= $ventana['fecha_fin'];
 
     return ['abierta' => $abierta, 'fecha_inicio' => $ventana['fecha_inicio'], 'fecha_fin' => $ventana['fecha_fin']];
+}
+
+function telefono_valido(string $telefono): bool
+{
+    return (bool) preg_match('/^\d{10}$/', $telefono);
+}
+
+function email_valido(string $email): bool
+{
+    return filter_var($email, FILTER_VALIDATE_EMAIL) !== false;
 }
 
 function tiene_calificaciones_capturadas(PDO $pdo, string $idAsignacion, string $tipo): bool

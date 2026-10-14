@@ -18,19 +18,21 @@ import {
   IonSelectOption,
   IonTitle,
   IonToolbar,
-  ToastController,
+  ViewWillEnter,
 } from '@ionic/angular/standalone';
 import {
   AdminService,
   AlumnoAdmin,
   AsignacionAcademica,
+  CicloEscolar,
   DocenteAdmin,
   GrupoAdmin,
   MateriaAdmin,
   PeriodoEscolar,
 } from '../../../services/admin.service';
+import { AlertaService, TipoAlerta } from '../../../services/alerta.service';
 
-type Segmento = 'crear' | 'alumnos' | 'tutor' | 'materias';
+type Segmento = 'crear' | 'alumnos' | 'tutor' | 'materias' | 'avanzar';
 
 @Component({
   selector: 'app-admin-grupos',
@@ -57,20 +59,29 @@ type Segmento = 'crear' | 'alumnos' | 'tutor' | 'materias';
     IonCheckbox,
   ],
 })
-export class AdminGruposPage {
+export class AdminGruposPage implements ViewWillEnter {
   segmento: Segmento = 'crear';
 
   grupos: GrupoAdmin[] = [];
   docentes: DocenteAdmin[] = [];
   materias: MateriaAdmin[] = [];
   periodos: PeriodoEscolar[] = [];
+  ciclos: CicloEscolar[] = [];
   filtroGrupoTexto = '';
 
   // Crear grupo
   nombreGrupo = '';
   semestreGrupo: number | null = null;
+  periodoGrupo: string | null = null;
+  cicloGrupo: string | null = null;
   claveTutorGrupo: string | null = null;
   guardandoGrupo = false;
+
+  // Avanzar de semestre
+  grupoOrigenAvanzar: string | null = null;
+  nombreGrupoDestinoAvanzar = '';
+  cicloDestinoAvanzar: string | null = null;
+  avanzandoSemestre = false;
 
   // Asignar / cambiar alumnos de grupo
   alumnos: AlumnoAdmin[] = [];
@@ -96,8 +107,12 @@ export class AdminGruposPage {
 
   constructor(
     private readonly adminService: AdminService,
-    private readonly toastController: ToastController,
+    private readonly alertas: AlertaService,
   ) {
+    this.cargarCatalogos();
+  }
+
+  ionViewWillEnter(): void {
     this.cargarCatalogos();
   }
 
@@ -110,16 +125,18 @@ export class AdminGruposPage {
   }
 
   async cargarCatalogos(): Promise<void> {
-    const [grupos, docentes, materias, periodos] = await Promise.all([
+    const [grupos, docentes, materias, periodos, ciclos] = await Promise.all([
       this.adminService.getGrupos(),
       this.adminService.getDocentes(),
       this.adminService.getMaterias(),
       this.adminService.getPeriodos(),
+      this.adminService.getCiclosEscolares(),
     ]);
     this.grupos = grupos;
     this.docentes = docentes;
     this.materias = materias;
     this.periodos = periodos;
+    this.ciclos = ciclos;
   }
 
   get gruposFiltradosPorSemestre(): GrupoAdmin[] {
@@ -180,8 +197,8 @@ export class AdminGruposPage {
 
   // --- Crear grupo ---
   async crearGrupo(): Promise<void> {
-    if (!this.nombreGrupo.trim() || !this.semestreGrupo) {
-      await this.mostrarToast('Nombre y semestre del grupo son requeridos', 'danger');
+    if (!this.nombreGrupo.trim() || !this.semestreGrupo || !this.periodoGrupo) {
+      await this.mostrarToast('Nombre, semestre y periodo escolar del grupo son requeridos', 'danger');
       return;
     }
 
@@ -190,11 +207,15 @@ export class AdminGruposPage {
       await this.adminService.crearGrupo({
         nombre: this.nombreGrupo,
         semestre: this.semestreGrupo,
+        id_periodo: this.periodoGrupo,
+        id_ciclo: this.cicloGrupo,
         clave_tutor: this.claveTutorGrupo,
       });
       await this.mostrarToast('Grupo creado correctamente', 'success');
       this.nombreGrupo = '';
       this.semestreGrupo = null;
+      this.periodoGrupo = null;
+      this.cicloGrupo = null;
       this.claveTutorGrupo = null;
       await this.cargarCatalogos();
     } catch (error) {
@@ -209,6 +230,7 @@ export class AdminGruposPage {
     this.alumnos = await this.adminService.getAlumnos({
       id_periodo: this.filtroPeriodo || undefined,
       semestre: this.filtroSemestre || undefined,
+      estatus: 'activo',
     });
     this.seleccionados.clear();
   }
@@ -233,12 +255,12 @@ export class AdminGruposPage {
       if (resultado.omitidos > 0 && resultado.actualizados > 0) {
         await this.mostrarToast(
           `${resultado.actualizados} alumno(s) asignado(s). ${resultado.omitidos} no se movieron porque su semestre está en curso.`,
-          'danger',
+          'warning',
         );
       } else if (resultado.omitidos > 0) {
         await this.mostrarToast(
           'No se movió ningún alumno: su semestre sigue en curso. Solo se puede cambiar de grupo entre semestres.',
-          'danger',
+          'warning',
         );
       } else {
         await this.mostrarToast('Alumnos asignados al grupo correctamente', 'success');
@@ -303,8 +325,55 @@ export class AdminGruposPage {
     }
   }
 
-  private async mostrarToast(message: string, color: 'success' | 'danger'): Promise<void> {
-    const toast = await this.toastController.create({ message, color, duration: 2500, position: 'bottom' });
-    await toast.present();
+  // --- Avanzar de semestre ---
+  onCambioGrupoOrigenAvanzar(): void {
+    const grupo = this.grupos.find((g) => g.id_grupo === this.grupoOrigenAvanzar);
+    if (!grupo) {
+      this.nombreGrupoDestinoAvanzar = '';
+      return;
+    }
+    const match = grupo.nombre.match(/^(\d+)(.*)$/);
+    this.nombreGrupoDestinoAvanzar = match ? `${parseInt(match[1], 10) + 1}${match[2]}` : '';
+  }
+
+  async avanzarSemestre(): Promise<void> {
+    if (!this.grupoOrigenAvanzar || !this.nombreGrupoDestinoAvanzar.trim()) {
+      await this.mostrarToast('Selecciona el grupo origen y el nombre del grupo destino', 'danger');
+      return;
+    }
+
+    this.avanzandoSemestre = true;
+    try {
+      const resultado = await this.adminService.avanzarSemestre({
+        id_grupo_origen: this.grupoOrigenAvanzar,
+        nombre_grupo_destino: this.nombreGrupoDestinoAvanzar.trim(),
+        id_ciclo_destino: this.cicloDestinoAvanzar,
+      });
+      if (resultado.omitidos > 0 && resultado.actualizados > 0) {
+        await this.mostrarToast(
+          `${resultado.actualizados} alumno(s) avanzados. ${resultado.omitidos} no se movieron porque su semestre está en curso.`,
+          'warning',
+        );
+      } else if (resultado.omitidos > 0) {
+        await this.mostrarToast(
+          'No se movió ningún alumno: su semestre sigue en curso (ventana de captura activa).',
+          'warning',
+        );
+      } else {
+        await this.mostrarToast(`${resultado.actualizados} alumno(s) avanzados al siguiente semestre correctamente`, 'success');
+      }
+      this.grupoOrigenAvanzar = null;
+      this.nombreGrupoDestinoAvanzar = '';
+      this.cicloDestinoAvanzar = null;
+      await this.cargarCatalogos();
+    } catch (error) {
+      await this.mostrarToast(error instanceof Error ? error.message : 'Ocurrió un error al avanzar de semestre', 'danger');
+    } finally {
+      this.avanzandoSemestre = false;
+    }
+  }
+
+  private async mostrarToast(message: string, color: TipoAlerta): Promise<void> {
+    await this.alertas.mostrar(message, color);
   }
 }

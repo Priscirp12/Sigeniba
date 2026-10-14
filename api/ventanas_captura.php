@@ -7,13 +7,14 @@ $tiposValidos = ['parcial1', 'parcial2', 'parcial3', 'extraordinario', 'intersem
 
 if ($method === 'GET') {
     $idPeriodo = $_GET['id_periodo'] ?? null;
+    $semestre = $_GET['semestre'] ?? null;
 
-    if (!$idPeriodo) {
-        send_error('id_periodo requerido');
+    if (!$idPeriodo || !$semestre) {
+        send_error('id_periodo y semestre son requeridos');
     }
 
-    $stmt = $pdo->prepare('SELECT id_ventana, id_periodo, tipo, fecha_inicio, fecha_fin FROM ventanas_captura WHERE id_periodo = ?');
-    $stmt->execute([$idPeriodo]);
+    $stmt = $pdo->prepare('SELECT id_ventana, id_periodo, semestre, tipo, fecha_inicio, fecha_fin FROM ventanas_captura WHERE id_periodo = ? AND semestre = ?');
+    $stmt->execute([$idPeriodo, $semestre]);
     echo json_encode($stmt->fetchAll());
     exit;
 }
@@ -21,16 +22,17 @@ if ($method === 'GET') {
 if ($method === 'POST') {
     $data = read_json_body();
     $idPeriodo = $data['id_periodo'] ?? null;
+    $semestre = $data['semestre'] ?? null;
     $tipo = $data['tipo'] ?? null;
     $fechaInicio = $data['fecha_inicio'] ?? null;
     $fechaFin = $data['fecha_fin'] ?? null;
 
-    if (!$idPeriodo || !in_array($tipo, $tiposValidos, true) || !$fechaInicio || !$fechaFin) {
-        send_error('id_periodo, tipo válido, fecha_inicio y fecha_fin son requeridos');
+    if (!$idPeriodo || !$semestre || !in_array($tipo, $tiposValidos, true) || !$fechaInicio || !$fechaFin) {
+        send_error('id_periodo, semestre, tipo válido, fecha_inicio y fecha_fin son requeridos');
     }
 
-    $stmt = $pdo->prepare('SELECT id_ventana FROM ventanas_captura WHERE id_periodo = ? AND tipo = ?');
-    $stmt->execute([$idPeriodo, $tipo]);
+    $stmt = $pdo->prepare('SELECT id_ventana FROM ventanas_captura WHERE id_periodo = ? AND semestre = ? AND tipo = ?');
+    $stmt->execute([$idPeriodo, $semestre, $tipo]);
     $existing = $stmt->fetch();
 
     if ($existing) {
@@ -39,8 +41,8 @@ if ($method === 'POST') {
         $idVentana = $existing['id_ventana'];
     } else {
         $idVentana = generate_id('VEN');
-        $stmt = $pdo->prepare('INSERT INTO ventanas_captura (id_ventana, id_periodo, tipo, fecha_inicio, fecha_fin) VALUES (?, ?, ?, ?, ?)');
-        $stmt->execute([$idVentana, $idPeriodo, $tipo, $fechaInicio, $fechaFin]);
+        $stmt = $pdo->prepare('INSERT INTO ventanas_captura (id_ventana, id_periodo, semestre, tipo, fecha_inicio, fecha_fin) VALUES (?, ?, ?, ?, ?, ?)');
+        $stmt->execute([$idVentana, $idPeriodo, $semestre, $tipo, $fechaInicio, $fechaFin]);
     }
 
     echo json_encode(['success' => true, 'id_ventana' => $idVentana]);

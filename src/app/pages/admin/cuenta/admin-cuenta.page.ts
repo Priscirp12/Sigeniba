@@ -2,11 +2,12 @@ import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { IonButton, IonContent, IonIcon, IonInput, IonItem, IonLabel, IonList, ToastController } from '@ionic/angular/standalone';
+import { IonButton, IonContent, IonIcon, IonInput, IonItem, IonLabel, IonList } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { eyeOffOutline, eyeOutline } from 'ionicons/icons';
 import { AdminService } from '../../../services/admin.service';
 import { AuthService } from '../../../services/auth.service';
+import { AlertaService, TipoAlerta } from '../../../services/alerta.service';
 
 @Component({
   selector: 'app-admin-cuenta',
@@ -30,7 +31,7 @@ export class AdminCuentaPage {
     private readonly adminService: AdminService,
     private readonly authService: AuthService,
     private readonly router: Router,
-    private readonly toastController: ToastController,
+    private readonly alertas: AlertaService,
   ) {
     addIcons({ eyeOutline, eyeOffOutline });
   }
@@ -68,8 +69,7 @@ export class AdminCuentaPage {
     }
   }
 
-  private async mostrarToast(message: string, color: 'success' | 'danger'): Promise<void> {
-    const toast = await this.toastController.create({ message, color, duration: 2500, position: 'bottom' });
-    await toast.present();
+  private async mostrarToast(message: string, color: TipoAlerta): Promise<void> {
+    await this.alertas.mostrar(message, color);
   }
 }

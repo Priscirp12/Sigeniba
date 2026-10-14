@@ -13,6 +13,7 @@ import {
   IonModal,
   IonTitle,
   IonToolbar,
+  ViewWillEnter,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { eyeOutline } from 'ionicons/icons';
@@ -47,7 +48,7 @@ const ETIQUETAS_PARCIAL: Record<TipoParcial, string> = {
     IonCardContent,
   ],
 })
-export class AlumnoCalificacionesPage {
+export class AlumnoCalificacionesPage implements ViewWillEnter {
   materias: MateriaCalificacionesAlumno[] = [];
   cargando = false;
   materiaSeleccionada: MateriaCalificacionesAlumno | null = null;
@@ -60,6 +61,10 @@ export class AlumnoCalificacionesPage {
     private readonly authService: AuthService,
   ) {
     addIcons({ eyeOutline });
+    this.cargarDatos();
+  }
+
+  ionViewWillEnter(): void {
     this.cargarDatos();
   }
 

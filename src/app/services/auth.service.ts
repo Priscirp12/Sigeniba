@@ -21,6 +21,7 @@ interface AuthResponse {
 })
 export class AuthService {
   private readonly storageKey = 'sigenibaUser';
+  private readonly actividadKey = 'sigenibaUltimaActividad';
   private currentUser: AuthUser | null = null;
 
   constructor(private readonly api: ApiService) {
@@ -51,6 +52,7 @@ export class AuthService {
 
     this.currentUser = response.user;
     localStorage.setItem(this.storageKey, JSON.stringify(response.user));
+    this.registrarActividad(Date.now());
 
     return response.user;
   }
@@ -58,6 +60,20 @@ export class AuthService {
   logout(): void {
     this.currentUser = null;
     localStorage.removeItem(this.storageKey);
+    localStorage.removeItem(this.actividadKey);
+  }
+
+  sesionGuardada(): boolean {
+    return localStorage.getItem(this.storageKey) !== null;
+  }
+
+  registrarActividad(momento: number): void {
+    localStorage.setItem(this.actividadKey, String(momento));
+  }
+
+  ultimaActividad(): number | null {
+    const valor = Number(localStorage.getItem(this.actividadKey));
+    return Number.isFinite(valor) && valor > 0 ? valor : null;
   }
 
   hasRole(...roles: string[]): boolean {

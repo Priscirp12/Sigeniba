@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
-import { IonButton, IonContent, IonIcon } from '@ionic/angular/standalone';
+import { IonButton, IonContent, IonIcon, ViewWillEnter } from '@ionic/angular/standalone';
 import jsPDF from 'jspdf';
 import { addIcons } from 'ionicons';
 import { downloadOutline } from 'ionicons/icons';
@@ -13,7 +13,7 @@ import { AuthService } from '../../../services/auth.service';
   styleUrls: ['./alumno-historial.page.scss'],
   imports: [CommonModule, IonContent, IonButton, IonIcon],
 })
-export class AlumnoHistorialPage {
+export class AlumnoHistorialPage implements ViewWillEnter {
   historial: HistorialAcademico | null = null;
   cargando = false;
 
@@ -22,6 +22,10 @@ export class AlumnoHistorialPage {
     private readonly authService: AuthService,
   ) {
     addIcons({ downloadOutline });
+    this.cargarDatos();
+  }
+
+  ionViewWillEnter(): void {
     this.cargarDatos();
   }
 
@@ -87,7 +91,7 @@ export class AlumnoHistorialPage {
 
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(11);
-      doc.text(`Semestre ${semestre.etiqueta}`, margenIzquierdo, y);
+      doc.text(semestre.etiqueta, margenIzquierdo, y);
       y += 6;
 
       doc.setFontSize(9);
@@ -100,10 +104,30 @@ export class AlumnoHistorialPage {
 
       doc.setFont('helvetica', 'normal');
       for (const materia of semestre.materias) {
-        saltoDePaginaSiNecesario(8);
+        saltoDePaginaSiNecesario(12);
         doc.text(materia.nombre, margenIzquierdo, y);
         doc.text(String(materia.calificacion), anchoPagina - margenDerecho, y, { align: 'right' });
         y += 6;
+
+        if (materia.origen_calificacion !== 'regular') {
+          const etiquetaOrigen = materia.origen_calificacion === 'extraordinario' ? 'Extraordinario' : 'Intersemestral';
+          const partes = [`Regular: ${materia.calificacion_regular ?? '—'}`];
+          if (materia.calificacion_extraordinario !== null) {
+            partes.push(`Extraordinario: ${materia.calificacion_extraordinario}`);
+          }
+          if (materia.calificacion_intersemestral !== null) {
+            partes.push(`Intersemestral: ${materia.calificacion_intersemestral}`);
+          }
+
+          doc.setFont('helvetica', 'italic');
+          doc.setFontSize(7.5);
+          doc.text(partes.join('  ·  '), margenIzquierdo + 4, y);
+          doc.setFont('helvetica', 'bold');
+          doc.text(`(calificación final: ${etiquetaOrigen})`, anchoPagina - margenDerecho, y, { align: 'right' });
+          doc.setFont('helvetica', 'normal');
+          doc.setFontSize(9);
+          y += 5;
+        }
       }
 
       doc.setLineWidth(0.5);
