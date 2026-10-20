@@ -49,14 +49,44 @@ h3 {
   margin: 0 0 0.5rem;
 }
 
+.titulo-preview {
+  margin-top: 1.25rem;
+}
+
 .vista-previa {
   background: #fff;
   border-radius: 16px;
   padding: 1.25rem;
   box-shadow: 0 10px 30px rgba(15, 61, 103, 0.1);
   max-width: 720px;
-  white-space: pre-line;
   font-size: 0.85rem;
   color: #1e293b;
   text-align: center;
+}
+
+.preview-texto {
+  white-space: pre-line;
+}
+
+.preview-logos {
+  display: grid;
+  grid-template-columns: 64px 1fr 64px;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.9rem;
+  color: #111827;
+  font-size: 1rem;
+}
+
+.preview-logo {
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.preview-logo img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
 }

@@ -88,6 +88,29 @@ export interface VentanaCaptura {
   fecha_fin: string;
 }
 
+/** Grupo con alumnos activos y el grupo al que pasaría en el siguiente semestre. */
+export interface GrupoAvance {
+  id_grupo: string;
+  nombre: string;
+  semestre: number;
+  id_periodo: string | null;
+  id_ciclo: string | null;
+  generacion: string | null;
+  ciclo_escolar: string | null;
+  alumnos: number;
+  destino_nombre: string | null;
+  destino_semestre: number | null;
+  estado: 'listo' | 'en_curso' | 'ultimo_semestre';
+}
+
+export interface ResultadoAvance {
+  success: boolean;
+  grupos_avanzados: number;
+  alumnos_avanzados: number;
+  grupos_en_curso: number;
+  grupos_ultimo_semestre: number;
+}
+
 export interface AlumnoFiltro {
   id_periodo?: string;
   semestre?: number | string;
@@ -176,12 +199,12 @@ export class AdminService {
     return this.api.put('grupos.php?action=asignar_tutor', { id_grupo: idGrupo, id_docente: idDocente });
   }
 
-  async avanzarSemestre(payload: {
-    id_grupo_origen: string;
-    nombre_grupo_destino: string;
-    id_ciclo_destino: string | null;
-  }): Promise<{ success: boolean; id_grupo_destino: string; actualizados: number; omitidos: number }> {
-    return this.api.put('grupos.php?action=avanzar_semestre', payload);
+  async getAvanceGrupos(): Promise<GrupoAvance[]> {
+    return this.api.get<GrupoAvance[]>('grupos.php?action=avance');
+  }
+
+  async avanzarTodosLosGrupos(): Promise<ResultadoAvance> {
+    return this.api.put('grupos.php?action=avanzar_todos', {});
   }
 
   // Asignaciones académicas (materia <-> docente <-> grupo <-> periodo)

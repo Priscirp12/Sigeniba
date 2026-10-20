@@ -1,0 +1,76 @@
+:host {
+  display: block;
+  max-width: 720px;
+}
+
+.logos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 0.9rem;
+}
+
+.logo-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 1rem;
+  box-shadow: 0 10px 30px rgba(15, 61, 103, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.logo-encabezado {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.logo-encabezado strong {
+  color: #0f3d67;
+}
+
+.logo-encabezado span {
+  color: #64748b;
+  font-size: 0.78rem;
+}
+
+.logo-preview {
+  height: 130px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  background: #f9fbfd;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem;
+}
+
+.logo-preview img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.logo-preview.vacio {
+  border-style: dashed;
+  flex-direction: column;
+  gap: 0.3rem;
+  color: #94a3b8;
+  font-size: 0.8rem;
+}
+
+.logo-preview.vacio ion-icon {
+  font-size: 1.8rem;
+}
+
+.logo-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.nota {
+  color: #64748b;
+  font-size: 0.78rem;
+  margin: 0.6rem 0 0;
+}

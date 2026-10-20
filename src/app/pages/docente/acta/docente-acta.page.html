@@ -1,0 +1,109 @@
+<ion-content class="ion-padding docente-shell">
+  <p class="breadcrumb">
+    <button type="button" class="enlace" (click)="volver()">Mis Grupos</button> &gt; Acta de calificaciones
+  </p>
+
+  <div class="acciones-header">
+    <div class="titulo">
+      <button type="button" class="volver" (click)="volver()" title="Volver a Mis Grupos">
+        <ion-icon name="arrow-back-outline"></ion-icon>
+      </button>
+      <h1>Acta de calificaciones</h1>
+    </div>
+    <ion-button [disabled]="!acta || descargando" (click)="descargarPdf()">
+      <ion-icon slot="start" name="download-outline"></ion-icon>
+      {{ descargando ? 'Generando PDF…' : 'Descargar PDF' }}
+    </ion-button>
+  </div>
+
+  <p class="estado-carga" *ngIf="cargando">Generando el acta…</p>
+
+  <div class="aviso-error" *ngIf="error">
+    <strong>No se pudo generar el acta.</strong>
+    <span>{{ error }}</span>
+    <ion-button size="small" fill="outline" (click)="volver()">Volver a Mis Grupos</ion-button>
+  </div>
+
+  <div class="documento" *ngIf="acta as a">
+    <!-- Encabezado -->
+    <header class="doc-encabezado">
+      <div class="doc-logo izquierda">
+        <img *ngIf="config?.logo_sep as logo" [src]="logo" alt="Logo SEP" />
+      </div>
+      <div class="doc-textos">
+        <span *ngFor="let linea of encabezadoInstitucion">{{ linea }}</span>
+        <strong>{{ nombrePlantel }}</strong>
+        <em>Acta de calificaciones</em>
+      </div>
+      <div class="doc-logo derecha">
+        <img *ngIf="config?.logo_plantel as logo" [src]="logo" alt="Logo del plantel" />
+      </div>
+    </header>
+
+    <!-- Datos de la asignatura -->
+    <div class="doc-datos">
+      <p><span>Ciclo escolar:</span> <strong>{{ a.encabezado.ciclo_escolar || '—' }}</strong></p>
+      <p><span>Generación:</span> <strong>{{ a.encabezado.generacion || '—' }}</strong></p>
+      <p><span>Semestre:</span> <strong>{{ a.encabezado.semestre }}°</strong></p>
+      <p class="doble"><span>Asignatura / módulo:</span> <strong>{{ a.encabezado.materia || '—' }}</strong></p>
+      <p><span>Grupo:</span> <strong>{{ a.encabezado.grupo || '—' }}</strong></p>
+      <p class="doble"><span>Docente:</span> <strong>{{ a.encabezado.docente || '—' }}</strong></p>
+      <p><span>Clave:</span> <strong>{{ a.encabezado.clave || '—' }}</strong></p>
+    </div>
+
+    <!-- Alumnos -->
+    <div class="doc-tabla">
+      <table>
+        <thead>
+          <tr>
+            <th class="centro">No.</th>
+            <th class="centro">Matrícula</th>
+            <th>Nombre del alumno</th>
+            <th class="centro">P1</th>
+            <th class="centro">P2</th>
+            <th class="centro">P3</th>
+            <th class="centro">Final</th>
+            <th class="centro">TAC</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let fila of a.alumnos" [class.reprobado]="fila.tac === 'NA'">
+            <td class="centro">{{ fila.no }}</td>
+            <td class="centro">{{ fila.matricula }}</td>
+            <td>{{ fila.nombre }}</td>
+            <td class="centro">{{ formatearCalificacion(fila.parcial1) }}</td>
+            <td class="centro">{{ formatearCalificacion(fila.parcial2) }}</td>
+            <td class="centro">{{ formatearCalificacion(fila.parcial3) }}</td>
+            <td class="centro final">{{ formatearCalificacion(fila.final) }}</td>
+            <td class="centro tac">{{ fila.tac }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Resumen -->
+    <p class="doc-resumen">
+      <span>Inscritos: {{ a.resumen.inscritos }}</span>
+      <span>Acreditados: {{ a.resumen.acreditados }}</span>
+      <span>No acreditados: {{ a.resumen.no_acreditados }}</span>
+      <span>Promedio del grupo: {{ a.resumen.promedio_grupo !== null ? a.resumen.promedio_grupo.toFixed(1) : '—' }}</span>
+    </p>
+    <p class="doc-leyenda">
+      TAC = tipo de acreditación · O ordinario · E extraordinario · IS intersemestral · NA no acreditado · Final =
+      promedio de P1-P3 o calificación de E / IS · Mínima aprobatoria {{ calificacionAprobatoria }}
+    </p>
+
+    <!-- Firmas -->
+    <div class="doc-firmas">
+      <div class="firma" *ngFor="let firma of firmas">
+        <strong>{{ firma.cargo }}</strong>
+        <span>{{ firma.detalle }}</span>
+      </div>
+    </div>
+
+    <div class="doc-pie">
+      <span>Fecha de cierre: {{ formatearFecha(a.acta?.fecha_cierre) }}</span>
+      <span>Folio: {{ a.acta?.folio ?? '—' }}</span>
+    </div>
+  </div>
+</ion-content>

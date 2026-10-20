@@ -130,3 +130,55 @@ h3 {
   margin: 0 0 1rem;
   font-size: 0.85rem;
 }
+
+.tabla-avance td {
+  vertical-align: middle;
+}
+
+.tabla-avance .detalle {
+  display: block;
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.tabla-avance .flecha {
+  color: #1f6cb5;
+  font-size: 1.2rem;
+  font-weight: 700;
+  width: 2rem;
+  text-align: center;
+}
+
+.tabla-avance .fila-inactiva td {
+  color: #94a3b8;
+}
+
+.estado {
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.estado.listo {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.estado.en_curso {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.estado.ultimo_semestre {
+  background: #e2e8f0;
+  color: #475569;
+}
+
+.avance-acciones {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1rem;
+}

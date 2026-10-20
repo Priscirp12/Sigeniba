@@ -6,6 +6,8 @@ import { addIcons } from 'ionicons';
 import { downloadOutline } from 'ionicons/icons';
 import { AlumnoService, HistorialAcademico } from '../../../services/alumno.service';
 import { AuthService } from '../../../services/auth.service';
+import { DocumentosConfigService } from '../../../services/documentos-config.service';
+import { dibujarLogo } from '../../../services/pdf-logos';
 
 @Component({
   selector: 'app-alumno-historial',
@@ -20,6 +22,7 @@ export class AlumnoHistorialPage implements ViewWillEnter {
   constructor(
     private readonly alumnoService: AlumnoService,
     private readonly authService: AuthService,
+    private readonly documentosConfig: DocumentosConfigService,
   ) {
     addIcons({ downloadOutline });
     this.cargarDatos();
@@ -42,10 +45,13 @@ export class AlumnoHistorialPage implements ViewWillEnter {
     }
   }
 
-  descargarPdf(): void {
+  async descargarPdf(): Promise<void> {
     if (!this.historial) {
       return;
     }
+
+    // Logos configurados por el administrador (los mismos que en las actas).
+    const config = await this.documentosConfig.obtenerParaPdf();
 
     const doc = new jsPDF();
     const anchoPagina = doc.internal.pageSize.getWidth();
@@ -62,10 +68,14 @@ export class AlumnoHistorialPage implements ViewWillEnter {
       }
     };
 
+    const tamanoLogo = 20;
+    dibujarLogo(doc, config.logo_sep, margenIzquierdo, 10, tamanoLogo, 'left');
+    dibujarLogo(doc, config.logo_plantel, anchoPagina - margenDerecho - tamanoLogo, 10, tamanoLogo, 'right');
+
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(16);
     doc.text('Historial Académico', anchoPagina / 2, y, { align: 'center' });
-    y += 10;
+    y += config.logo_sep || config.logo_plantel ? 15 : 10;
 
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(9);

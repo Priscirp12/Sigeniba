@@ -27,6 +27,7 @@ import {
   menuOutline,
   peopleOutline,
   personCircleOutline,
+  ribbonOutline,
   schoolOutline,
 } from 'ionicons/icons';
 import { AuthService } from '../../services/auth.service';
@@ -80,6 +81,7 @@ export class AdminShellPage {
       menuOutline,
       chevronDownOutline,
       documentTextOutline,
+      ribbonOutline,
     });
   }
 

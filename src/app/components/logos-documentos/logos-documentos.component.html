@@ -1,0 +1,36 @@
+<div class="logos-grid">
+  <div class="logo-card" *ngFor="let espacio of espacios">
+    <div class="logo-encabezado">
+      <strong>{{ espacio.titulo }}</strong>
+      <span>{{ espacio.posicion }}</span>
+    </div>
+
+    <div class="logo-preview" [class.vacio]="!logos[espacio.campo]">
+      <img *ngIf="logos[espacio.campo] as logo" [src]="logo" [alt]="espacio.titulo" />
+      <ng-container *ngIf="!logos[espacio.campo]">
+        <ion-icon name="image-outline"></ion-icon>
+        <span>{{ cargando ? 'Cargando…' : 'Sin logo' }}</span>
+      </ng-container>
+    </div>
+
+    <div class="logo-acciones">
+      <ion-button size="small" fill="outline" [disabled]="cargando || guardando[espacio.campo]" (click)="selector.click()">
+        <ion-icon slot="start" name="cloud-upload-outline"></ion-icon>
+        {{ logos[espacio.campo] ? 'Cambiar' : 'Cargar' }}
+      </ion-button>
+      <ion-button
+        *ngIf="logos[espacio.campo]"
+        size="small"
+        fill="clear"
+        color="danger"
+        [disabled]="guardando[espacio.campo]"
+        (click)="quitar(espacio.campo)"
+      >
+        <ion-icon slot="start" name="trash-outline"></ion-icon>
+        Quitar
+      </ion-button>
+      <input #selector type="file" accept="image/png,image/jpeg,image/webp" hidden (change)="alSeleccionar(espacio.campo, $event)" />
+    </div>
+  </div>
+</div>
+<p class="nota">PNG, JPG o WEBP de hasta 5 MB. Se recomienda PNG con fondo transparente. Los mismos logos se usan en las actas de calificaciones y en el historial académico.</p>

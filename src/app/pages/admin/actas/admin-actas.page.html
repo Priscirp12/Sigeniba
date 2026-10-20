@@ -1,0 +1,59 @@
+<ion-content class="ion-padding admin-shell">
+  <div class="page-header">
+    <h1>Actas de calificaciones</h1>
+  </div>
+
+  <p class="ayuda">
+    Estos datos aparecen en las actas de calificaciones que generan los docentes desde "Mis Grupos". Los nombres
+    se imprimen debajo de las líneas de firma; si se dejan vacíos, el acta muestra "Nombre y firma".
+  </p>
+
+  <h3>Firmas del acta</h3>
+  <ion-item>
+    <ion-label position="stacked">Director(a) del plantel</ion-label>
+    <ion-input [(ngModel)]="nombreDirector" maxlength="150" placeholder="Ej. Mtra. Ana María López Ruiz" [disabled]="cargando"></ion-input>
+  </ion-item>
+  <ion-item>
+    <ion-label position="stacked">Encargado(a) de control escolar</ion-label>
+    <ion-input [(ngModel)]="nombreControlEscolar" maxlength="150" placeholder="Ej. Lic. José Ramírez Pérez" [disabled]="cargando"></ion-input>
+  </ion-item>
+  <div class="actions">
+    <ion-button [disabled]="guardando || cargando" (click)="guardar()">Guardar cambios</ion-button>
+  </div>
+
+  <h3>Logos</h3>
+  <app-logos-documentos (cambio)="logos = $event"></app-logos-documentos>
+
+  <h3 class="titulo-preview">Vista previa</h3>
+  <div class="vista-previa">
+    <div class="preview-encabezado">
+      <div class="preview-logo">
+        <img *ngIf="logos.logo_sep as logo" [src]="logo" alt="Logo SEP" />
+      </div>
+      <div class="preview-textos">
+        <span>Subsecretaría de Educación Media Superior</span>
+        <span>Dirección General de Educación Tecnológica Agropecuaria y Ciencias del Mar</span>
+        <strong>Centro de Bachillerato Tecnológico agropecuario No. 180</strong>
+        <em>Acta de calificaciones</em>
+      </div>
+      <div class="preview-logo">
+        <img *ngIf="logos.logo_plantel as logo" [src]="logo" alt="Logo del plantel" />
+      </div>
+    </div>
+
+    <div class="preview-firmas">
+      <div class="firma">
+        <strong>Docente</strong>
+        <span>Nombre del docente</span>
+      </div>
+      <div class="firma">
+        <strong>Control escolar</strong>
+        <span>{{ nombreControlEscolar.trim() || 'Nombre y firma' }}</span>
+      </div>
+      <div class="firma">
+        <strong>Dirección del plantel</strong>
+        <span>{{ nombreDirector.trim() || 'Nombre, firma y sello' }}</span>
+      </div>
+    </div>
+  </div>
+</ion-content>

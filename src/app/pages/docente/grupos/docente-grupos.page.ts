@@ -3,6 +3,7 @@ import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import {
+  AlertController,
   IonButton,
   IonButtons,
   IonContent,
@@ -19,8 +20,9 @@ import {
   ViewWillEnter,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { arrowBackOutline } from 'ionicons/icons';
+import { arrowBackOutline, documentTextOutline } from 'ionicons/icons';
 import { AdminService, AlumnoAdmin } from '../../../services/admin.service';
+import { AlertaService } from '../../../services/alerta.service';
 import { AuthService } from '../../../services/auth.service';
 import { AsignacionDocente, DocenteService, TipoEvaluacion } from '../../../services/docente.service';
 
@@ -74,13 +76,17 @@ export class DocenteGruposPage implements ViewWillEnter {
   modalDetalleAbierto = false;
   alumnoDetalle: AlumnoAdmin | null = null;
 
+  generandoActa: Record<string, boolean> = {};
+
   constructor(
     private readonly docenteService: DocenteService,
     private readonly adminService: AdminService,
     private readonly authService: AuthService,
     private readonly router: Router,
+    private readonly alertas: AlertaService,
+    private readonly alertController: AlertController,
   ) {
-    addIcons({ arrowBackOutline });
+    addIcons({ arrowBackOutline, documentTextOutline });
     this.cargarDatos();
   }
 
@@ -198,6 +204,46 @@ export class DocenteGruposPage implements ViewWillEnter {
 
   cerrarDetalle(): void {
     this.modalDetalleAbierto = false;
+  }
+
+  async generarActa(asignacion: AsignacionDocente): Promise<void> {
+    const idDocente = this.authService.user?.id_usuario;
+    if (!idDocente || this.generandoActa[asignacion.id_asignacion]) {
+      return;
+    }
+
+    this.generandoActa[asignacion.id_asignacion] = true;
+    try {
+      // Solo se genera cuando los 3 parciales están completos para todos los alumnos.
+      const estado = await this.docenteService.getActa(asignacion.id_asignacion);
+      if (!estado.lista) {
+        const alerta = await this.alertController.create({
+          header: 'Aún no se puede generar el acta',
+          subHeader: `${asignacion.materia_nombre} — ${asignacion.grupo_nombre}`,
+          message:
+            'Primero deben estar cargadas todas las calificaciones de los 3 parciales:\n\n' +
+            estado.faltantes.map((faltante) => `• ${faltante}`).join('\n'),
+          cssClass: 'alerta-faltantes',
+          buttons: [
+            { text: 'Cerrar', role: 'cancel' },
+            { text: 'Ir a capturar', handler: () => this.irACapturar(asignacion.id_asignacion) },
+          ],
+        });
+        await alerta.present();
+        return;
+      }
+
+      // Vista previa del acta; desde ahí se descarga el PDF.
+      await this.router.navigate(['/docente/grupos/acta', asignacion.id_asignacion]);
+    } catch (error) {
+      await this.alertas.mostrar(error instanceof Error ? error.message : 'Ocurrió un error al generar el acta', 'danger');
+    } finally {
+      this.generandoActa[asignacion.id_asignacion] = false;
+    }
+  }
+
+  private irACapturar(idAsignacion: string): void {
+    void this.router.navigate(['/docente/calificaciones'], { queryParams: { id_asignacion: idAsignacion } });
   }
 
   async capturarCalificaciones(): Promise<void> {

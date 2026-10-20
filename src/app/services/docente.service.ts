@@ -53,6 +53,39 @@ export interface CalificacionesResponse {
   suma_criterios: number;
 }
 
+export interface FilaActa {
+  no: number;
+  matricula: string;
+  nombre: string;
+  parcial1: number | null;
+  parcial2: number | null;
+  parcial3: number | null;
+  final: number | null;
+  tac: 'O' | 'E' | 'IS' | 'NA';
+}
+
+export interface ActaCalificaciones {
+  lista: boolean;
+  faltantes: string[];
+  encabezado: {
+    materia: string | null;
+    clave: string | null;
+    grupo: string | null;
+    semestre: number;
+    generacion: string | null;
+    ciclo_escolar: string | null;
+    docente: string | null;
+  };
+  alumnos: FilaActa[];
+  resumen: {
+    inscritos: number;
+    acreditados: number;
+    no_acreditados: number;
+    promedio_grupo: number | null;
+  };
+  acta: { folio: string; fecha_cierre: string; fecha_actualizacion: string } | null;
+}
+
 export interface CriteriosResponse {
   criterios: CriterioEvaluacion[];
   tiene_calificaciones: boolean;
@@ -90,6 +123,14 @@ export class DocenteService {
 
   async guardarCalificacion(matricula: string, idCriterio: string, valor: number): Promise<{ success: boolean }> {
     return this.api.post('calificaciones.php', { matricula, id_criterio: idCriterio, valor });
+  }
+
+  async getActa(idAsignacion: string): Promise<ActaCalificaciones> {
+    return this.api.get<ActaCalificaciones>(`actas.php?id_asignacion=${idAsignacion}`);
+  }
+
+  async generarActa(idAsignacion: string, idDocente: string): Promise<ActaCalificaciones> {
+    return this.api.post<ActaCalificaciones>('actas.php', { id_asignacion: idAsignacion, id_docente: idDocente });
   }
 
   async vaciarCalificaciones(idAsignacion: string, tipo: TipoEvaluacion): Promise<{ success: boolean; eliminadas: number }> {

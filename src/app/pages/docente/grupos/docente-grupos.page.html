@@ -34,7 +34,18 @@
           <td>{{ asignacion.grupo_nombre }}</td>
           <td>{{ asignacion.semestre }}</td>
           <td>{{ asignacion.materia_nombre }}</td>
-          <td><ion-button size="small" fill="outline" (click)="verAlumnos(asignacion)">Ver Alumnos</ion-button></td>
+          <td class="acciones">
+            <ion-button size="small" fill="outline" (click)="verAlumnos(asignacion)">Ver Alumnos</ion-button>
+            <ion-button
+              size="small"
+              [disabled]="generandoActa[asignacion.id_asignacion]"
+              (click)="generarActa(asignacion)"
+              title="Disponible cuando estén capturados los 3 parciales"
+            >
+              <ion-icon slot="start" name="document-text-outline"></ion-icon>
+              {{ generandoActa[asignacion.id_asignacion] ? 'Generando…' : 'Generar acta' }}
+            </ion-button>
+          </td>
         </tr>
         <tr *ngIf="!cargando && !asignacionesFiltradas.length">
           <td colspan="4" class="empty">No tienes grupos asignados todavía.</td>

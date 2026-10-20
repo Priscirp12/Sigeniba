@@ -252,40 +252,67 @@
     </ng-container>
   </div>
 
-  <!-- Avanzar de semestre -->
+  <!-- Avanzar de semestre: todos los grupos a la vez -->
   <div *ngIf="segmento === 'avanzar'">
     <p class="aviso-semestre">
-      Mueve a todos los alumnos de un grupo al siguiente semestre de un solo paso (ej. de "1A" a "2A"). Se
-      crea el grupo destino si no existe. Igual que en "Asignar alumnos", solo se mueven los alumnos que no
-      tengan una ventana de captura activa hoy. La asignación de materias y docentes del nuevo semestre se
-      hace aparte, en "Materias a docente".
+      Estos son los grupos que hoy tienen alumnos activos y el grupo al que pasarán (ej. 1A → 2A, dentro de la
+      misma generación). Al avanzar se mueven todos los grupos de todos los semestres de una sola vez y se crea
+      el grupo destino si no existe. No se mueven los grupos cuya generación tiene una ventana de captura activa
+      hoy ni los de 6° semestre. Los alumnos en baja temporal se quedan en su grupo. La asignación de materias y
+      docentes del nuevo semestre se hace aparte, en "Materias a docente".
     </p>
 
-    <ion-item>
-      <ion-label position="stacked">Grupo origen</ion-label>
-      <ion-select [(ngModel)]="grupoOrigenAvanzar" (ionChange)="onCambioGrupoOrigenAvanzar()" interface="popover">
-        <ion-select-option *ngFor="let grupo of grupos" [value]="grupo.id_grupo">
-          {{ grupo.nombre }} — Semestre {{ grupo.semestre }} — {{ periodoNombre(grupo.id_periodo) }}
-        </ion-select-option>
-      </ion-select>
-    </ion-item>
+    <div class="table-wrapper">
+      <table class="tabla-avance">
+        <thead>
+          <tr>
+            <th>Grupo actual</th>
+            <th>Generación</th>
+            <th>Alumnos</th>
+            <th></th>
+            <th>Pasa a</th>
+            <th>Estado</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let grupo of gruposAvance" [class.fila-inactiva]="grupo.estado !== 'listo'">
+            <td>
+              <strong>{{ grupo.nombre }}</strong>
+              <span class="detalle">Semestre {{ grupo.semestre }}</span>
+            </td>
+            <td>{{ grupo.generacion ?? 'Sin generación' }}</td>
+            <td>{{ grupo.alumnos }}</td>
+            <td class="flecha">→</td>
+            <td>
+              <ng-container *ngIf="grupo.destino_nombre; else sinDestino">
+                <strong>{{ grupo.destino_nombre }}</strong>
+                <span class="detalle">Semestre {{ grupo.destino_semestre }}</span>
+              </ng-container>
+              <ng-template #sinDestino><span class="detalle">—</span></ng-template>
+            </td>
+            <td>
+              <span class="estado" [ngClass]="grupo.estado">
+                {{ grupo.estado === 'listo' ? 'Listo para avanzar' : grupo.estado === 'en_curso' ? 'Semestre en curso' : 'Último semestre — no avanza' }}
+              </span>
+            </td>
+          </tr>
+          <tr *ngIf="!cargandoAvance && !gruposAvance.length">
+            <td colspan="6" class="empty">No hay grupos con alumnos activos.</td>
+          </tr>
+          <tr *ngIf="cargandoAvance && !gruposAvance.length">
+            <td colspan="6" class="empty">Cargando grupos…</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
 
-    <ng-container *ngIf="grupoOrigenAvanzar">
-      <ion-item>
-        <ion-label position="stacked">Nombre del grupo destino</ion-label>
-        <ion-input [(ngModel)]="nombreGrupoDestinoAvanzar" placeholder="Ej. 2A"></ion-input>
-      </ion-item>
-      <ion-item>
-        <ion-label position="stacked">Ciclo escolar destino (opcional)</ion-label>
-        <ion-select [(ngModel)]="cicloDestinoAvanzar" interface="popover">
-          <ion-select-option [value]="null">Sin especificar</ion-select-option>
-          <ion-select-option *ngFor="let ciclo of ciclos" [value]="ciclo.id_ciclo">{{ ciclo.nombre }}</ion-select-option>
-        </ion-select>
-        <ion-note *ngIf="!ciclos.length">Aún no hay ciclos escolares. Crea uno en "Fechas de captura".</ion-note>
-      </ion-item>
-      <div class="actions">
-        <ion-button [disabled]="avanzandoSemestre" (click)="avanzarSemestre()">Avanzar alumnos</ion-button>
-      </div>
-    </ng-container>
+    <div class="avance-acciones">
+      <ion-button
+        [disabled]="avanzandoSemestre || cargandoAvance || !gruposListosParaAvanzar.length"
+        (click)="confirmarAvance()"
+      >
+        {{ avanzandoSemestre ? 'Avanzando…' : 'Avanzar todos los grupos (' + gruposListosParaAvanzar.length + ')' }}
+      </ion-button>
+    </div>
   </div>
 </ion-content>

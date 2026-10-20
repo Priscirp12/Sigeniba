@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { IonButton, IonContent, IonItem, IonLabel, IonTextarea } from '@ionic/angular/standalone';
+import { LogosDocumentos, LogosDocumentosComponent } from '../../../components/logos-documentos/logos-documentos.component';
 import { AdminService } from '../../../services/admin.service';
 import { AlertaService, TipoAlerta } from '../../../services/alerta.service';
 
@@ -16,10 +17,11 @@ const EJEMPLO = {
   selector: 'app-admin-historial',
   templateUrl: './admin-historial.page.html',
   styleUrls: ['./admin-historial.page.scss'],
-  imports: [CommonModule, FormsModule, IonContent, IonButton, IonItem, IonLabel, IonTextarea],
+  imports: [CommonModule, FormsModule, IonContent, IonButton, IonItem, IonLabel, IonTextarea, LogosDocumentosComponent],
 })
 export class AdminHistorialPage {
   plantilla = '';
+  logos: LogosDocumentos = { logo_sep: null, logo_plantel: null };
   cargando = false;
   guardando = false;
 

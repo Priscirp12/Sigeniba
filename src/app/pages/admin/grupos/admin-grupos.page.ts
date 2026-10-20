@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
+  AlertController,
   IonButton,
   IonCheckbox,
   IonContent,
@@ -27,6 +28,7 @@ import {
   CicloEscolar,
   DocenteAdmin,
   GrupoAdmin,
+  GrupoAvance,
   MateriaAdmin,
   PeriodoEscolar,
 } from '../../../services/admin.service';
@@ -78,9 +80,8 @@ export class AdminGruposPage implements ViewWillEnter {
   guardandoGrupo = false;
 
   // Avanzar de semestre
-  grupoOrigenAvanzar: string | null = null;
-  nombreGrupoDestinoAvanzar = '';
-  cicloDestinoAvanzar: string | null = null;
+  gruposAvance: GrupoAvance[] = [];
+  cargandoAvance = false;
   avanzandoSemestre = false;
 
   // Asignar / cambiar alumnos de grupo
@@ -108,12 +109,16 @@ export class AdminGruposPage implements ViewWillEnter {
   constructor(
     private readonly adminService: AdminService,
     private readonly alertas: AlertaService,
+    private readonly alertController: AlertController,
   ) {
     this.cargarCatalogos();
   }
 
   ionViewWillEnter(): void {
     this.cargarCatalogos();
+    if (this.segmento === 'avanzar') {
+      this.cargarAvance();
+    }
   }
 
   get gruposFiltrados(): GrupoAdmin[] {
@@ -192,6 +197,9 @@ export class AdminGruposPage implements ViewWillEnter {
     this.segmento = segmento;
     if (segmento === 'alumnos') {
       this.buscarAlumnos();
+    }
+    if (segmento === 'avanzar') {
+      this.cargarAvance();
     }
   }
 
@@ -325,47 +333,60 @@ export class AdminGruposPage implements ViewWillEnter {
     }
   }
 
-  // --- Avanzar de semestre ---
-  onCambioGrupoOrigenAvanzar(): void {
-    const grupo = this.grupos.find((g) => g.id_grupo === this.grupoOrigenAvanzar);
-    if (!grupo) {
-      this.nombreGrupoDestinoAvanzar = '';
-      return;
+  // --- Avanzar de semestre (todos los grupos) ---
+  async cargarAvance(): Promise<void> {
+    this.cargandoAvance = true;
+    try {
+      this.gruposAvance = await this.adminService.getAvanceGrupos();
+    } catch (error) {
+      await this.mostrarToast(error instanceof Error ? error.message : 'No se pudieron cargar los grupos', 'danger');
+    } finally {
+      this.cargandoAvance = false;
     }
-    const match = grupo.nombre.match(/^(\d+)(.*)$/);
-    this.nombreGrupoDestinoAvanzar = match ? `${parseInt(match[1], 10) + 1}${match[2]}` : '';
   }
 
-  async avanzarSemestre(): Promise<void> {
-    if (!this.grupoOrigenAvanzar || !this.nombreGrupoDestinoAvanzar.trim()) {
-      await this.mostrarToast('Selecciona el grupo origen y el nombre del grupo destino', 'danger');
+  get gruposListosParaAvanzar(): GrupoAvance[] {
+    return this.gruposAvance.filter((grupo) => grupo.estado === 'listo');
+  }
+
+  get alumnosPorAvanzar(): number {
+    return this.gruposListosParaAvanzar.reduce((total, grupo) => total + grupo.alumnos, 0);
+  }
+
+  async confirmarAvance(): Promise<void> {
+    const listos = this.gruposListosParaAvanzar;
+    if (!listos.length) {
+      await this.mostrarToast('No hay grupos que puedan avanzar en este momento', 'warning');
       return;
     }
 
+    const cambios = listos.map((grupo) => `${grupo.nombre} → ${grupo.destino_nombre}`).join(', ');
+    const alerta = await this.alertController.create({
+      header: 'Avanzar todos los grupos',
+      message:
+        `Se moverán ${this.alumnosPorAvanzar} alumno(s) de ${listos.length} grupo(s) al siguiente semestre: ${cambios}.\n\n` +
+        'Los grupos con semestre en curso o en 6° semestre no se moverán. ¿Deseas continuar?',
+      cssClass: 'alerta-faltantes',
+      buttons: [
+        { text: 'Cancelar', role: 'cancel' },
+        { text: 'Avanzar', handler: () => void this.avanzarTodos() },
+      ],
+    });
+    await alerta.present();
+  }
+
+  private async avanzarTodos(): Promise<void> {
     this.avanzandoSemestre = true;
     try {
-      const resultado = await this.adminService.avanzarSemestre({
-        id_grupo_origen: this.grupoOrigenAvanzar,
-        nombre_grupo_destino: this.nombreGrupoDestinoAvanzar.trim(),
-        id_ciclo_destino: this.cicloDestinoAvanzar,
-      });
-      if (resultado.omitidos > 0 && resultado.actualizados > 0) {
-        await this.mostrarToast(
-          `${resultado.actualizados} alumno(s) avanzados. ${resultado.omitidos} no se movieron porque su semestre está en curso.`,
-          'warning',
-        );
-      } else if (resultado.omitidos > 0) {
-        await this.mostrarToast(
-          'No se movió ningún alumno: su semestre sigue en curso (ventana de captura activa).',
-          'warning',
-        );
-      } else {
-        await this.mostrarToast(`${resultado.actualizados} alumno(s) avanzados al siguiente semestre correctamente`, 'success');
-      }
-      this.grupoOrigenAvanzar = null;
-      this.nombreGrupoDestinoAvanzar = '';
-      this.cicloDestinoAvanzar = null;
-      await this.cargarCatalogos();
+      const resultado = await this.adminService.avanzarTodosLosGrupos();
+      const omitidos = resultado.grupos_en_curso
+        ? ` ${resultado.grupos_en_curso} grupo(s) no se movieron porque su semestre está en curso.`
+        : '';
+      await this.mostrarToast(
+        `${resultado.alumnos_avanzados} alumno(s) de ${resultado.grupos_avanzados} grupo(s) avanzaron al siguiente semestre.${omitidos}`,
+        omitidos ? 'warning' : 'success',
+      );
+      await Promise.all([this.cargarAvance(), this.cargarCatalogos()]);
     } catch (error) {
       await this.mostrarToast(error instanceof Error ? error.message : 'Ocurrió un error al avanzar de semestre', 'danger');
     } finally {

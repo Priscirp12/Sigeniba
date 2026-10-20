@@ -1,0 +1,271 @@
+.docente-shell {
+  --background: #f4f7fb;
+}
+
+.breadcrumb {
+  margin: 0 0 0.25rem;
+  color: #64748b;
+  font-size: 0.85rem;
+}
+
+.breadcrumb .enlace {
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  color: #1f6cb5;
+  cursor: pointer;
+}
+
+.breadcrumb .enlace:hover {
+  text-decoration: underline;
+}
+
+.acciones-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.titulo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.titulo h1 {
+  margin: 0;
+  color: #0f3d67;
+  font-size: 1.3rem;
+  font-weight: 800;
+}
+
+.volver {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 10px;
+  background: #eef4fb;
+  color: #1f6cb5;
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+.volver:hover {
+  background: #dbe8f6;
+}
+
+.estado-carga {
+  color: #64748b;
+}
+
+.aviso-error {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.4rem;
+  max-width: 860px;
+  background: #fef3c7;
+  color: #92400e;
+  border-radius: 14px;
+  padding: 1rem 1.25rem;
+}
+
+/* --- Documento: réplica del PDF --- */
+.documento {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(15, 61, 103, 0.1);
+  padding: 2rem;
+  max-width: 860px;
+  color: #111827;
+}
+
+.doc-encabezado {
+  display: grid;
+  grid-template-columns: 80px 1fr 80px;
+  align-items: center;
+  gap: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #94a3b8;
+}
+
+.doc-logo {
+  height: 80px;
+  display: flex;
+  align-items: center;
+}
+
+.doc-logo.izquierda {
+  justify-content: flex-start;
+}
+
+.doc-logo.derecha {
+  justify-content: flex-end;
+}
+
+.doc-logo img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.doc-textos {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.15rem;
+  color: #64748b;
+  font-size: 0.8rem;
+}
+
+.doc-textos strong {
+  margin-top: 0.35rem;
+  color: #111827;
+  font-size: 1.15rem;
+}
+
+.doc-textos em {
+  font-style: normal;
+  font-weight: 700;
+  color: #111827;
+  font-size: 0.95rem;
+}
+
+.doc-datos {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.45rem 1rem;
+  margin: 1.1rem 0 1.25rem;
+  font-size: 0.85rem;
+}
+
+.doc-datos p {
+  margin: 0;
+}
+
+.doc-datos .doble {
+  grid-column: span 2;
+}
+
+.doc-datos span {
+  color: #64748b;
+}
+
+.doc-tabla {
+  overflow-x: auto;
+}
+
+.doc-tabla table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.doc-tabla th,
+.doc-tabla td {
+  border: 1px solid #94a3b8;
+  padding: 0.35rem 0.5rem;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.doc-tabla th {
+  background: #e2e8f0;
+  font-weight: 700;
+}
+
+.doc-tabla .centro {
+  text-align: center;
+}
+
+.doc-tabla .final {
+  font-weight: 700;
+}
+
+.doc-tabla tr.reprobado .final,
+.doc-tabla tr.reprobado .tac {
+  color: #b91c1c;
+}
+
+.doc-resumen {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 2rem;
+  margin: 1rem 0 0.35rem;
+  font-size: 0.85rem;
+}
+
+.doc-leyenda {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.72rem;
+}
+
+.doc-firmas {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  margin-top: 4rem;
+}
+
+.firma {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.15rem;
+  border-top: 1px solid #111827;
+  padding-top: 0.4rem;
+  font-size: 0.82rem;
+}
+
+.firma span {
+  color: #64748b;
+  font-size: 0.78rem;
+}
+
+.doc-pie {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 2rem;
+  color: #64748b;
+  font-size: 0.8rem;
+}
+
+@media (max-width: 640px) {
+  .documento {
+    padding: 1.25rem 1rem;
+  }
+
+  .doc-encabezado {
+    grid-template-columns: 48px 1fr 48px;
+    gap: 0.5rem;
+  }
+
+  .doc-logo {
+    height: 48px;
+  }
+
+  .doc-datos {
+    grid-template-columns: 1fr;
+  }
+
+  .doc-datos .doble {
+    grid-column: auto;
+  }
+
+  .doc-firmas {
+    grid-template-columns: 1fr;
+    gap: 2.75rem;
+  }
+}

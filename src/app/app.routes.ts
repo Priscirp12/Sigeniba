@@ -67,6 +67,10 @@ export const routes: Routes = [
         path: 'historial',
         loadComponent: () => import('./pages/admin/historial/admin-historial.page').then((m) => m.AdminHistorialPage),
       },
+      {
+        path: 'actas',
+        loadComponent: () => import('./pages/admin/actas/admin-actas.page').then((m) => m.AdminActasPage),
+      },
     ],
   },
   {
@@ -86,6 +90,10 @@ export const routes: Routes = [
       {
         path: 'grupos',
         loadComponent: () => import('./pages/docente/grupos/docente-grupos.page').then((m) => m.DocenteGruposPage),
+      },
+      {
+        path: 'grupos/acta/:idAsignacion',
+        loadComponent: () => import('./pages/docente/acta/docente-acta.page').then((m) => m.DocenteActaPage),
       },
       {
         path: 'criterios',

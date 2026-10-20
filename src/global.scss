@@ -91,3 +91,9 @@ ion-toast.alerta-sigeniba::part(message) {
 ion-toast.alerta-warning {
   --color: #422006;
 }
+
+/* Alerta que lista lo que falta capturar antes de generar un acta. */
+ion-alert.alerta-faltantes .alert-message {
+  white-space: pre-line;
+  text-align: left;
+}

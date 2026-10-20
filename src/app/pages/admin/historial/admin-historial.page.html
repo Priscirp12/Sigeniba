@@ -19,6 +19,16 @@
     <ion-button [disabled]="guardando || cargando" (click)="guardar()">Guardar cambios</ion-button>
   </div>
 
-  <h3>Vista previa (con datos de ejemplo)</h3>
-  <div class="vista-previa">{{ vistaPrevia }}</div>
+  <h3>Logos</h3>
+  <app-logos-documentos (cambio)="logos = $event"></app-logos-documentos>
+
+  <h3 class="titulo-preview">Vista previa (con datos de ejemplo)</h3>
+  <div class="vista-previa">
+    <div class="preview-logos" *ngIf="logos.logo_sep || logos.logo_plantel">
+      <div class="preview-logo"><img *ngIf="logos.logo_sep as logo" [src]="logo" alt="Logo SEP" /></div>
+      <strong>Historial Académico</strong>
+      <div class="preview-logo"><img *ngIf="logos.logo_plantel as logo" [src]="logo" alt="Logo del plantel" /></div>
+    </div>
+    <div class="preview-texto">{{ vistaPrevia }}</div>
+  </div>
 </ion-content>
