@@ -83,8 +83,11 @@ if ($method === 'POST') {
     if (!$matricula || !$idCriterio || $valor === null) {
         send_error('matricula, id_criterio y valor son requeridos');
     }
+    if (!is_numeric($valor)) {
+        send_error('La calificación debe ser un número');
+    }
 
-    $stmt = $pdo->prepare('SELECT c.valor_puntos, c.tipo, a.id_periodo, g.semestre
+    $stmt = $pdo->prepare('SELECT c.valor_puntos, c.tipo, a.id_periodo, a.id_grupo, g.semestre
                             FROM criterios_evaluacion c
                             LEFT JOIN asignaciones_academicas a ON a.id_asignacion = c.id_asignacion
                             LEFT JOIN grupos g ON g.id_grupo = a.id_grupo
@@ -96,12 +99,16 @@ if ($method === 'POST') {
         send_error('Criterio no encontrado', 404);
     }
 
-    $stmt = $pdo->prepare('SELECT estatus FROM alumnos WHERE matricula = ?');
+    $stmt = $pdo->prepare('SELECT estatus, id_grupo FROM alumnos WHERE matricula = ?');
     $stmt->execute([$matricula]);
-    $estatusAlumno = $stmt->fetchColumn();
+    $alumno = $stmt->fetch();
 
-    if ($estatusAlumno === false) {
+    if (!$alumno) {
         send_error('Alumno no encontrado', 404);
+    }
+    $estatusAlumno = $alumno['estatus'];
+    if ($alumno['id_grupo'] !== $criterio['id_grupo']) {
+        send_error('El alumno no pertenece al grupo de esta materia', 403);
     }
     if ($estatusAlumno === 'inactivo') {
         send_error('El alumno está dado de baja temporal: no se le pueden registrar calificaciones', 403);
